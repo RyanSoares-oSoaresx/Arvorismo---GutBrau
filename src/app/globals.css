@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fbfaf6;
+  --foreground: #1c1a17;
+  --primary: #0a2a15; /* Verde Floresta Oficial GutBrau */
+  --primary-hover: #04140a;
+  --accent: #bda269; /* Dourado Premium Oficial GutBrau */
+  --accent-hover: #9c8250;
+  --card-bg: #ffffff;
+  --card-border: #e7e3dc;
+  --text-muted: #575249;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-text-muted: var(--text-muted);
+  --font-serif: var(--font-cinzel);
+  --font-sans: var(--font-jakarta);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #060e0a; /* Escuro esverdeado orgânico rústico */
+    --foreground: #f4f6f4;
+    --primary: #1e3928; /* Verde Secundário do Site */
+    --primary-hover: #0a2a15;
+    --accent: #bda269;
+    --accent-hover: #a58b54;
+    --card-bg: #0c1410;
+    --card-border: #15241b;
+    --text-muted: #95a399;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+}
+
+h1, h2, h3, .font-serif-brand {
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+
