@@ -68,7 +68,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
 
   useEffect(() => {
     if (dataInicio) {
-      calculateWeekDays(dataInicio);
+      calculateWeekDays(dataInicio, itens);
     } else {
       setDiasDaSemana([]);
     }
@@ -107,13 +107,15 @@ export default function EditEscalaPage({ params }: EditPageProps) {
           setSabadoCancelado(escala.sabado_cancelado || false);
           setDomingoCancelado(escala.domingo_cancelado || false);
           setObservacoes(escala.observacoes || '');
-          setItens(escala.itens.map(item => ({
+          const mappedItens = escala.itens.map(item => ({
             id: item.id,
             colaborador_id: item.colaborador_id,
             data: item.data,
             turno: item.turno,
             funcao: item.funcao,
-          })));
+          }));
+          setItens(mappedItens);
+          calculateWeekDays(escala.data_inicio, mappedItens);
         } else {
           router.push('/admin');
         }
@@ -134,7 +136,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
     }
   };
 
-  const calculateWeekDays = (mondayStr: string) => {
+  const calculateWeekDays = (mondayStr: string, currentItens = itens) => {
     const monday = new Date(mondayStr + 'T00:00:00');
     
     // Automatically set end date (Sunday)
@@ -142,17 +144,48 @@ export default function EditEscalaPage({ params }: EditPageProps) {
     sunday.setDate(monday.getDate() + 6);
     setDataFim(sunday.toISOString().split('T')[0]);
 
-    const days = [];
+    const days: { nome: string; dataStr: string }[] = [];
     const nomes = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
     
-    for (let i = 0; i < 7; i++) {
-      const current = new Date(monday);
-      current.setDate(monday.getDate() + i);
-      days.push({
-        nome: nomes[i],
-        dataStr: current.toISOString().split('T')[0]
+    // Sábado e Domingo por padrão
+    const sat = new Date(monday);
+    sat.setDate(monday.getDate() + 5);
+    days.push({
+      nome: 'Sábado',
+      dataStr: sat.toISOString().split('T')[0]
+    });
+
+    const sun = new Date(monday);
+    sun.setDate(monday.getDate() + 6);
+    days.push({
+      nome: 'Domingo',
+      dataStr: sun.toISOString().split('T')[0]
+    });
+
+    // Adiciona outros dias se houver turnos cadastrados neles
+    if (currentItens && currentItens.length > 0) {
+      const satStr = sat.toISOString().split('T')[0];
+      const sunStr = sun.toISOString().split('T')[0];
+      
+      currentItens.forEach(item => {
+        if (item.data !== satStr && item.data !== sunStr) {
+          const itemDate = new Date(item.data + 'T00:00:00');
+          const diffTime = itemDate.getTime() - monday.getTime();
+          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+          if (diffDays >= 0 && diffDays < 5) {
+            const alreadyExists = days.some(d => d.dataStr === item.data);
+            if (!alreadyExists) {
+              days.push({
+                nome: nomes[diffDays],
+                dataStr: item.data
+              });
+            }
+          }
+        }
       });
     }
+
+    days.sort((a, b) => a.dataStr.localeCompare(b.dataStr));
     setDiasDaSemana(days);
   };
 
@@ -308,6 +341,64 @@ export default function EditEscalaPage({ params }: EditPageProps) {
               </div>
             </div>
 
+            {dataInicio && (
+              <div className="mb-6 pb-6 border-b border-stone-200 dark:border-stone-800">
+                <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2">
+                  Adicionar Dia Útil Adicional / Feriado
+                </label>
+                <div className="flex flex-wrap items-center gap-3">
+                  {(() => {
+                    const monday = new Date(dataInicio + 'T00:00:00');
+                    const nomes = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira'];
+                    const list = [];
+                    for (let i = 0; i < 5; i++) {
+                      const current = new Date(monday);
+                      current.setDate(monday.getDate() + i);
+                      const dataStr = current.toISOString().split('T')[0];
+                      const alreadyIn = diasDaSemana.some(d => d.dataStr === dataStr);
+                      if (!alreadyIn) {
+                        list.push({ nome: nomes[i], dataStr });
+                      }
+                    }
+                    if (list.length > 0) {
+                      return (
+                        <>
+                          <select
+                            id="weekday-selector"
+                            className="px-4 py-2.5 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-accent"
+                          >
+                            {list.map(d => (
+                              <option key={d.dataStr} value={JSON.stringify(d)}>
+                                {d.nome} ({d.dataStr.split('-')[2]}/{d.dataStr.split('-')[1]})
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const selector = document.getElementById('weekday-selector') as HTMLSelectElement;
+                              if (selector && selector.value) {
+                                const selected = JSON.parse(selector.value);
+                                setDiasDaSemana(prev => {
+                                  const updated = [...prev, selected];
+                                  updated.sort((a, b) => a.dataStr.localeCompare(b.dataStr));
+                                  return updated;
+                                });
+                              }
+                            }}
+                            className="px-4 py-2 bg-stone-900 hover:bg-stone-800 dark:bg-stone-950 dark:hover:bg-stone-850 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
+                          >
+                            + Adicionar Dia
+                          </button>
+                        </>
+                      );
+                    }
+                    return <p className="text-2xs text-stone-400 italic">Todos os dias úteis já foram adicionados a esta escala.</p>;
+                  })()}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2">
@@ -404,14 +495,32 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                             {dia.dataStr.split('-')[2]}/{dia.dataStr.split('-')[1]}
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleAddShift(dia.dataStr)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent hover:bg-accent-hover text-white text-xs font-semibold rounded-lg shadow-sm transition-all"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                          Adicionar Turno
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleAddShift(dia.dataStr)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent hover:bg-accent-hover text-white text-xs font-semibold rounded-lg shadow-sm transition-all"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            Adicionar Turno
+                          </button>
+                          
+                          {!isWeekendDay && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm(`Tem certeza que deseja remover ${dia.nome} da escala? Todos os turnos agendados nele serão excluídos.`)) {
+                                  setItens(prev => prev.filter(item => item.data !== dia.dataStr));
+                                  setDiasDaSemana(prev => prev.filter(d => d.dataStr !== dia.dataStr));
+                                }
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-650 text-xs font-semibold rounded-lg transition-all"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Remover Dia
+                            </button>
+                          )}
+                        </div>
                       </div>
 
                       {/* Day Shifts */}
