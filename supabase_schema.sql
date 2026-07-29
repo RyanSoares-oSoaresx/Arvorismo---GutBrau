@@ -48,23 +48,29 @@ ALTER TABLE escala_itens ENABLE ROW LEVEL SECURITY;
 -- As inserções/edições serão protegidas pela verificação da senha admin.
 
 -- Políticas para Colaboradores
+DROP POLICY IF EXISTS "Permitir leitura pública de colaboradores" ON colaboradores;
 CREATE POLICY "Permitir leitura pública de colaboradores" ON colaboradores
     FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Permitir modificação total de colaboradores (Admin)" ON colaboradores;
 CREATE POLICY "Permitir modificação total de colaboradores (Admin)" ON colaboradores
     FOR ALL USING (true); -- Controle feito via chave de API no backend
 
 -- Políticas para Escalas
+DROP POLICY IF EXISTS "Permitir leitura pública de escalas" ON escalas;
 CREATE POLICY "Permitir leitura pública de escalas" ON escalas
     FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Permitir modificação total de escalas (Admin)" ON escalas;
 CREATE POLICY "Permitir modificação total de escalas (Admin)" ON escalas
     FOR ALL USING (true);
 
 -- Políticas para Itens da Escala
+DROP POLICY IF EXISTS "Permitir leitura pública de itens da escala" ON escala_itens;
 CREATE POLICY "Permitir leitura pública de itens da escala" ON escala_itens
     FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Permitir modificação de itens da escala (Admin)" ON escala_itens;
 CREATE POLICY "Permitir modificação de itens da escala (Admin)" ON escala_itens
     FOR ALL USING (true);
 
