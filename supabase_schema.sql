@@ -68,12 +68,32 @@ CREATE POLICY "Permitir leitura pública de itens da escala" ON escala_itens
 CREATE POLICY "Permitir modificação de itens da escala (Admin)" ON escala_itens
     FOR ALL USING (true);
 
--- 5. DADOS INICIAIS (SEED) - Opcional para testes rápidos
+-- 5. DADOS INICIAIS (SEED) - Lista de Colaboradores Reais da GutBrau
 INSERT INTO colaboradores (nome, telefone, funcao_padrao) VALUES
-('João Silva', '(47) 99999-1111', 'Caixa'),
-('Maria Santos', '(47) 99999-2222', 'Atendimento'),
-('Pedro Souza', '(47) 99999-3333', 'Cozinha'),
-('Ana Oliveira', '(47) 99999-4444', 'Bar'),
-('Carlos Pereira', '(47) 99999-5555', 'Churrasqueiro'),
-('Beatriz Lima', '(47) 99999-6666', 'Atendimento')
+('André Rechia', '', 'Monitor'),
+('Claufer Scurra', '', 'Monitor'),
+('Guilherme Aguilhera', '', 'Resgatista'),
+('Leandro', '', 'Monitor'),
+('Adilson Corrêa Macêdo', '+55 47 9690-9398', 'Monitor'),
+('Adrian', '+55 79 8160-4431', 'Monitor'),
+('Ana Julia', '+55 47 9691-1349', 'Monitor'),
+('Andreia Gutknecht', '+55 47 9132-4981', 'Caixa'),
+('Arthur S.', '+55 47 8883-8392', 'Monitor'),
+('Barcelar', '+55 11 99282-9529', 'Monitor'),
+('Davi', '+55 47 9245-7850', 'Monitor'),
+('Djonatan Alves', '+55 47 9650-7594', 'Monitor'),
+('Gabriel', '+55 47 9140-3058', 'Monitor'),
+('Gabriel Rosa', '+55 47 9643-5644', 'Resgatista'),
+('Helo', '+55 47 8499-2868', 'Monitor'),
+('Henrique Saragoça', '+55 47 8802-4156', 'Monitor'),
+('Jordão Rafael', '+55 47 9151-1738', 'Resgatista'),
+('Karoline', '+55 47 8850-8894', 'Monitor'),
+('Mohrr', '+55 47 9908-2394', 'Monitor'),
+('Nicole Kaiser', '+55 47 9236-6921', 'Monitor'),
+('Você (Supervisor)', '+55 47 9994-6760', 'Monitor'),
+('Vitor', '+55 47 9914-0659', 'Monitor'),
+('Vitor Hugo Wielewski', '+55 47 9997-2848', 'Resgatista'),
+('Victor', '+55 47 8838-7696', 'Monitor'),
+('Ryan', '', 'Resgatista'),
+('Paulo', '', 'Monitor')
 ON CONFLICT DO NOTHING;
