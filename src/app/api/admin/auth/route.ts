@@ -5,9 +5,11 @@ import { cookies } from 'next/headers';
 export async function POST(request: Request) {
   try {
     const { password } = await request.json();
-    const adminPassword = process.env.ADMIN_PASSWORD || 'gutbrauadmin123';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'lider.arvorismo@2026';
+    const gerentePassword = process.env.GERENTE_PASSWORD || 'gerente.gutbrau';
+    const rhPassword = process.env.RH_PASSWORD || 'rh.gutbrau';
 
-    if (password === adminPassword) {
+    if (password === adminPassword || password === gerentePassword || password === rhPassword) {
       const response = NextResponse.json({ success: true });
       
       // Define cookie seguro de sessão (HTTP-only)
