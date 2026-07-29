@@ -23,6 +23,7 @@ interface EditPageProps {
 }
 
 const PRESET_TURNOS = [
+  '10:00 - 18:00',
   '09:00 - 18:00',
   '08:30 - 17:30',
   '10:00 - 19:00',
@@ -344,57 +345,66 @@ export default function EditEscalaPage({ params }: EditPageProps) {
             {dataInicio && (
               <div className="mb-6 pb-6 border-b border-stone-200 dark:border-stone-800">
                 <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2">
-                  Adicionar Dia Útil Adicional / Feriado
+                  Adicionar Feriado / Dia Especial (Caixa Vazia / Data)
                 </label>
-                <div className="flex flex-wrap items-center gap-3">
-                  {(() => {
-                    const monday = new Date(dataInicio + 'T00:00:00');
-                    const nomes = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira'];
-                    const list = [];
-                    for (let i = 0; i < 5; i++) {
-                      const current = new Date(monday);
-                      current.setDate(monday.getDate() + i);
-                      const dataStr = current.toISOString().split('T')[0];
-                      const alreadyIn = diasDaSemana.some(d => d.dataStr === dataStr);
-                      if (!alreadyIn) {
-                        list.push({ nome: nomes[i], dataStr });
+                <div className="flex flex-wrap items-end gap-3.5">
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wider">Nome do Dia / Feriado</span>
+                    <input
+                      type="text"
+                      id="custom-day-name"
+                      placeholder="Ex: Sexta-feira (Feriado)"
+                      className="px-3.5 py-2 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-850 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wider">Selecione a Data</span>
+                    <input
+                      type="date"
+                      id="custom-day-date"
+                      className="px-3.5 py-2 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-850 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-accent font-medium text-stone-800 dark:text-stone-200"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nameInput = document.getElementById('custom-day-name') as HTMLInputElement;
+                      const dateInput = document.getElementById('custom-day-date') as HTMLInputElement;
+                      if (dateInput && dateInput.value) {
+                        const dateStr = dateInput.value;
+                        let name = nameInput.value.trim();
+
+                        if (!name) {
+                          // Calculate default weekday name (e.g. "Sexta-feira (Feriado)")
+                          const dateObj = new Date(dateStr + 'T00:00:00');
+                          let dayOfWeekName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+                          dayOfWeekName = dayOfWeekName.charAt(0).toUpperCase() + dayOfWeekName.slice(1);
+                          name = `${dayOfWeekName} (Feriado)`;
+                        }
+                        
+                        // Check if already in the list
+                        const alreadyIn = diasDaSemana.some(d => d.dataStr === dateStr);
+                        if (alreadyIn) {
+                          alert('Este dia já foi adicionado.');
+                          return;
+                        }
+
+                        setDiasDaSemana(prev => {
+                          const updated = [...prev, { nome: name, dataStr: dateStr }];
+                          updated.sort((a, b) => a.dataStr.localeCompare(b.dataStr));
+                          return updated;
+                        });
+                        
+                        nameInput.value = '';
+                        dateInput.value = '';
+                      } else {
+                        alert('Por favor, selecione a data do feriado.');
                       }
-                    }
-                    if (list.length > 0) {
-                      return (
-                        <>
-                          <select
-                            id="weekday-selector"
-                            className="px-4 py-2.5 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-accent"
-                          >
-                            {list.map(d => (
-                              <option key={d.dataStr} value={JSON.stringify(d)}>
-                                {d.nome} ({d.dataStr.split('-')[2]}/{d.dataStr.split('-')[1]})
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const selector = document.getElementById('weekday-selector') as HTMLSelectElement;
-                              if (selector && selector.value) {
-                                const selected = JSON.parse(selector.value);
-                                setDiasDaSemana(prev => {
-                                  const updated = [...prev, selected];
-                                  updated.sort((a, b) => a.dataStr.localeCompare(b.dataStr));
-                                  return updated;
-                                });
-                              }
-                            }}
-                            className="px-4 py-2 bg-stone-900 hover:bg-stone-800 dark:bg-stone-950 dark:hover:bg-stone-850 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
-                          >
-                            + Adicionar Dia
-                          </button>
-                        </>
-                      );
-                    }
-                    return <p className="text-2xs text-stone-400 italic">Todos os dias úteis já foram adicionados a esta escala.</p>;
-                  })()}
+                    }}
+                    className="px-5 py-2.5 bg-stone-900 hover:bg-stone-800 dark:bg-stone-950 dark:hover:bg-stone-850 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
+                  >
+                    + Adicionar Feriado
+                  </button>
                 </div>
               </div>
             )}
