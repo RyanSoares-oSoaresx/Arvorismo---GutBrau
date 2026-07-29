@@ -18,7 +18,11 @@ import {
   CalendarDays,
   ShieldAlert,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Printer,
+  X,
+  Share2,
+  Clipboard
 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { Escala } from '@/types/database';
@@ -35,6 +39,78 @@ export default function AdminDashboardPage() {
   // Dashboard state
   const [escalas, setEscalas] = useState<Escala[]>([]);
   const [loadingEscalas, setLoadingEscalas] = useState(false);
+
+  // Export modal state
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportEscala, setExportEscala] = useState<any | null>(null);
+  const [exportLoading, setExportLoading] = useState(false);
+
+  const handleExportScale = async (escala: Escala) => {
+    setExportLoading(true);
+    setIsExportModalOpen(true);
+    try {
+      const full = await db.getEscalaById(escala.id);
+      setExportEscala(full);
+    } catch (err) {
+      console.error('Erro ao carregar escala para exportação:', err);
+      alert('Erro ao carregar escala.');
+      setIsExportModalOpen(false);
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const getTableRowsForDate = (dateStr: string, items: any[]) => {
+    const dayItems = items.filter(item => item.data === dateStr);
+    const resgatistas = dayItems.filter(item => item.funcao === 'Resgatista');
+    const caixas = dayItems.filter(item => item.funcao === 'Caixa');
+    const monitores = dayItems.filter(item => item.funcao === 'Monitor');
+
+    return {
+      resgatista1: resgatistas[0]?.colaborador?.nome || '',
+      resgatista2: resgatistas[1]?.colaborador?.nome || '',
+      monitor1: monitores[0]?.colaborador?.nome || '',
+      monitor2: monitores[1]?.colaborador?.nome || '',
+      monitor3: monitores[2]?.colaborador?.nome || '',
+      caixa: caixas[0]?.colaborador?.nome || '',
+    };
+  };
+
+  const renderExportTable = (title: string, data: ReturnType<typeof getTableRowsForDate>) => {
+    return (
+      <div className="flex flex-col items-center bg-white p-4 rounded-lg text-black font-sans break-inside-avoid">
+        <h4 className="font-bold text-center text-sm mb-2 font-sans">{title}</h4>
+        <table className="w-full max-w-md border-collapse border-[1.5px] border-black text-xs font-sans">
+          <tbody>
+            <tr>
+              <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Resgatista 1</td>
+              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.resgatista1}</td>
+            </tr>
+            <tr>
+              <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Resgatista 2</td>
+              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.resgatista2}</td>
+            </tr>
+            <tr>
+              <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Monitor I (Tirolesa)</td>
+              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.monitor1}</td>
+            </tr>
+            <tr>
+              <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Monitor II (Base)</td>
+              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.monitor2}</td>
+            </tr>
+            <tr>
+              <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Monitor III (Bike/Caixa)</td>
+              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.monitor3}</td>
+            </tr>
+            <tr>
+              <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Caixa</td>
+              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.caixa}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   useEffect(() => {
     checkAuth();
@@ -443,6 +519,14 @@ export default function AdminDashboardPage() {
                       </Link>
 
                       <button
+                        onClick={() => handleExportScale(escala)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-stone-850 dark:text-stone-250 text-xs font-bold uppercase tracking-wider rounded-xl transition-all border border-stone-200 dark:border-stone-850"
+                      >
+                        <Share2 className="w-3.5 h-3.5 text-accent" />
+                        Exportar
+                      </button>
+
+                      <button
                         onClick={() => handleDeleteEscala(escala.id)}
                         className="inline-flex items-center justify-center p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-650 dark:text-red-405 rounded-xl transition-all"
                         title="Excluir escala"
@@ -466,6 +550,91 @@ export default function AdminDashboardPage() {
         </div>
 
       </div>
+
+      {/* Export Modal overlay */}
+      {isExportModalOpen && exportEscala && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-sm transition-all duration-300 animate-fadeIn print:absolute print:inset-0 print:bg-white print:p-0 print:backdrop-blur-none">
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-850 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col relative overflow-hidden animate-scaleIn print:border-none print:shadow-none print:max-h-none print:w-full print:overflow-visible">
+            
+            {/* Modal Header */}
+            <div className="p-5 border-b border-stone-200 dark:border-stone-800 flex justify-between items-center bg-stone-50/50 dark:bg-stone-900/50 print:hidden">
+              <div className="flex items-center gap-2">
+                <Printer className="w-5 h-5 text-accent" />
+                <div>
+                  <h3 className="font-serif text-base font-bold text-stone-900 dark:text-white">
+                    Exportar Tabelas da Escala
+                  </h3>
+                  <p className="text-3xs text-stone-500 dark:text-stone-450 font-bold uppercase tracking-wider">
+                    Semana: {formatDate(exportEscala.data_inicio, true)} a {formatDate(exportEscala.data_fim, true)}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsExportModalOpen(false)}
+                className="p-1.5 hover:bg-stone-250 dark:hover:bg-stone-850 rounded-full text-stone-450 dark:text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 transition-colors"
+                title="Fechar"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-stone-50 dark:bg-stone-950/20 print:bg-white print:p-0 print:overflow-visible">
+              {exportLoading ? (
+                <div className="flex justify-center items-center py-16">
+                  <div className="w-8 h-8 border-3 border-accent/20 border-t-accent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <div id="export-tables-container" className="space-y-8 bg-white p-6 rounded-2xl border border-stone-200 dark:border-stone-850 print:border-none print:p-0 print:space-y-12">
+                  
+                  {/* Saturday Table */}
+                  {(() => {
+                    const monday = new Date(exportEscala.data_inicio + 'T00:00:00');
+                    const satDate = new Date(monday);
+                    satDate.setDate(monday.getDate() + 5);
+                    const satStr = satDate.toISOString().split('T')[0];
+                    const rows = getTableRowsForDate(satStr, exportEscala.itens);
+                    const header = `Arvorismo - Sábado ${String(satDate.getDate()).padStart(2, '0')}/${String(satDate.getMonth() + 1).padStart(2, '0')}`;
+                    return renderExportTable(header, rows);
+                  })()}
+
+                  {/* Sunday Table */}
+                  {(() => {
+                    const monday = new Date(exportEscala.data_inicio + 'T00:00:00');
+                    const sunDate = new Date(monday);
+                    sunDate.setDate(monday.getDate() + 6);
+                    const sunStr = sunDate.toISOString().split('T')[0];
+                    const rows = getTableRowsForDate(sunStr, exportEscala.itens);
+                    const header = `Arvorismo - Domingo ${String(sunDate.getDate()).padStart(2, '0')}/${String(sunDate.getMonth() + 1).padStart(2, '0')}`;
+                    return renderExportTable(header, rows);
+                  })()}
+
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-5 border-t border-stone-200 dark:border-stone-800 flex justify-end gap-3 bg-stone-50/50 dark:bg-stone-900/50 print:hidden">
+              <button
+                onClick={() => setIsExportModalOpen(false)}
+                className="px-4 py-2 bg-stone-200 hover:bg-stone-300 dark:bg-stone-800 dark:hover:bg-stone-750 text-stone-850 dark:text-stone-200 text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
+              >
+                Fechar
+              </button>
+              {!exportLoading && (
+                <button
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shadow-accent/15"
+                >
+                  <Printer className="w-4 h-4" />
+                  Imprimir / Salvar PDF
+                </button>
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="w-full bg-stone-900 text-stone-400 text-xs py-8 px-6 mt-16 border-t border-stone-850 text-center space-y-2.5">
