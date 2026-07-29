@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { Colaborador, Escala, EscalaItem } from '@/types/database';
+import { formatDate } from '@/lib/utils';
 
 interface EditPageProps {
   params: Promise<{ id: string }>;
@@ -46,6 +47,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
   // Form states
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
+  const [selectedSabado, setSelectedSabado] = useState('');
   const [publicada, setPublicada] = useState(false);
   const [sabadoCancelado, setSabadoCancelado] = useState(false);
   const [domingoCancelado, setDomingoCancelado] = useState(false);
@@ -68,12 +70,12 @@ export default function EditEscalaPage({ params }: EditPageProps) {
   }, []);
 
   useEffect(() => {
-    if (dataInicio) {
-      calculateWeekDays(dataInicio, itens);
+    if (selectedSabado) {
+      calculateWeekDays(selectedSabado, itens);
     } else {
       setDiasDaSemana([]);
     }
-  }, [dataInicio]);
+  }, [selectedSabado]);
 
   const checkAuth = async () => {
     try {
@@ -108,6 +110,14 @@ export default function EditEscalaPage({ params }: EditPageProps) {
           setSabadoCancelado(escala.sabado_cancelado || false);
           setDomingoCancelado(escala.domingo_cancelado || false);
           setObservacoes(escala.observacoes || '');
+          
+          // Calculate selectedSabado from data_fim (Sunday) by subtracting 1 day
+          const sunDate = new Date(escala.data_fim + 'T00:00:00');
+          const satDate = new Date(sunDate);
+          satDate.setDate(sunDate.getDate() - 1);
+          const satStr = satDate.toISOString().split('T')[0];
+          setSelectedSabado(satStr);
+
           const mappedItens = escala.itens.map(item => ({
             id: item.id,
             colaborador_id: item.colaborador_id,
@@ -116,19 +126,19 @@ export default function EditEscalaPage({ params }: EditPageProps) {
             funcao: item.funcao,
           }));
           setItens(mappedItens);
-          calculateWeekDays(escala.data_inicio, mappedItens);
+          calculateWeekDays(satStr, mappedItens);
         } else {
           router.push('/admin');
         }
       } else {
-        // Set default date to upcoming Monday
+        // Set default date to upcoming Saturday
         const today = new Date();
         const day = today.getDay();
-        const diffToMonday = day === 0 ? 1 : 8 - day; // how many days to next monday
-        const nextMonday = new Date(today);
-        nextMonday.setDate(today.getDate() + diffToMonday);
-        const nextMondayStr = nextMonday.toISOString().split('T')[0];
-        setDataInicio(nextMondayStr);
+        const diffToSaturday = day === 6 ? 0 : (day === 0 ? 6 : 6 - day); // how many days to Saturday
+        const nextSaturday = new Date(today);
+        nextSaturday.setDate(today.getDate() + diffToSaturday);
+        const nextSaturdayStr = nextSaturday.toISOString().split('T')[0];
+        setSelectedSabado(nextSaturdayStr);
       }
     } catch (err) {
       console.error('Erro ao carregar recursos:', err);
@@ -137,50 +147,35 @@ export default function EditEscalaPage({ params }: EditPageProps) {
     }
   };
 
-  const calculateWeekDays = (mondayStr: string, currentItens = itens) => {
-    const monday = new Date(mondayStr + 'T00:00:00');
-    
-    // Automatically set end date (Sunday)
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    setDataFim(sunday.toISOString().split('T')[0]);
+  const calculateWeekDays = (sabadoStr: string, currentItens = itens) => {
+    if (!sabadoStr) return;
 
-    const days: { nome: string; dataStr: string }[] = [];
-    const nomes = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
+    const sat = new Date(sabadoStr + 'T00:00:00');
+    const sun = new Date(sat);
+    sun.setDate(sat.getDate() + 1);
     
-    // Sábado e Domingo por padrão
-    const sat = new Date(monday);
-    sat.setDate(monday.getDate() + 5);
-    days.push({
-      nome: 'Sábado',
-      dataStr: sat.toISOString().split('T')[0]
-    });
+    const satStr = sat.toISOString().split('T')[0];
+    const sunStr = sun.toISOString().split('T')[0];
 
-    const sun = new Date(monday);
-    sun.setDate(monday.getDate() + 6);
-    days.push({
-      nome: 'Domingo',
-      dataStr: sun.toISOString().split('T')[0]
-    });
+    const days: { nome: string; dataStr: string }[] = [
+      { nome: 'Sábado', dataStr: satStr },
+      { nome: 'Domingo', dataStr: sunStr }
+    ];
 
     // Adiciona outros dias se houver turnos cadastrados neles
     if (currentItens && currentItens.length > 0) {
-      const satStr = sat.toISOString().split('T')[0];
-      const sunStr = sun.toISOString().split('T')[0];
-      
       currentItens.forEach(item => {
         if (item.data !== satStr && item.data !== sunStr) {
           const itemDate = new Date(item.data + 'T00:00:00');
-          const diffTime = itemDate.getTime() - monday.getTime();
-          const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-          if (diffDays >= 0 && diffDays < 5) {
-            const alreadyExists = days.some(d => d.dataStr === item.data);
-            if (!alreadyExists) {
-              days.push({
-                nome: nomes[diffDays],
-                dataStr: item.data
-              });
-            }
+          let dayOfWeekName = itemDate.toLocaleDateString('pt-BR', { weekday: 'long' });
+          dayOfWeekName = dayOfWeekName.charAt(0).toUpperCase() + dayOfWeekName.slice(1);
+          
+          const alreadyExists = days.some(d => d.dataStr === item.data);
+          if (!alreadyExists) {
+            days.push({
+              nome: `${dayOfWeekName} (Feriado)`,
+              dataStr: item.data
+            });
           }
         }
       });
@@ -188,6 +183,10 @@ export default function EditEscalaPage({ params }: EditPageProps) {
 
     days.sort((a, b) => a.dataStr.localeCompare(b.dataStr));
     setDiasDaSemana(days);
+
+    // O início real é o menor dia da lista (ex: Sexta se feriado, ou Sábado)
+    setDataInicio(days[0].dataStr);
+    setDataFim(sunStr); // Fim é sempre o Domingo por padrão
   };
 
   // Add empty shift to a specific date
@@ -318,31 +317,34 @@ export default function EditEscalaPage({ params }: EditPageProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
               <div>
                 <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2">
-                  Início da Semana (Segunda-feira)
+                  Data do Sábado da Escala (Selecione no Calendário)
                 </label>
                 <input
                   type="date"
                   required
-                  value={dataInicio}
-                  onChange={(e) => setDataInicio(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                  value={selectedSabado}
+                  onChange={(e) => setSelectedSabado(e.target.value)}
+                  onClick={(e) => e.currentTarget.showPicker?.()}
+                  className="w-full px-4 py-2.5 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all cursor-pointer font-semibold"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2">
-                  Fim da Semana (Domingo automático)
+                  Período Operacional Calculado
                 </label>
-                <input
-                  type="date"
-                  disabled
-                  value={dataFim}
-                  className="w-full px-4 py-2.5 bg-stone-100 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl text-sm text-stone-500 dark:text-stone-400 cursor-not-allowed"
-                />
+                <div className="flex gap-2">
+                  <div className="flex-1 px-4 py-2.5 bg-stone-100 dark:bg-stone-950/40 border border-stone-200 dark:border-stone-800 rounded-xl text-xs text-stone-500 dark:text-stone-400 font-semibold select-none">
+                    Início: {dataInicio ? formatDate(dataInicio, true) : 'Aguardando Sábado...'}
+                  </div>
+                  <div className="flex-1 px-4 py-2.5 bg-stone-100 dark:bg-stone-950/40 border border-stone-200 dark:border-stone-800 rounded-xl text-xs text-stone-500 dark:text-stone-400 font-semibold select-none">
+                    Fim: {dataFim ? formatDate(dataFim, true) : 'Aguardando Sábado...'}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {dataInicio && (
+            {selectedSabado && (
               <div className="mb-6 pb-6 border-b border-stone-200 dark:border-stone-800">
                 <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2">
                   Adicionar Feriado / Dia Especial (Caixa Vazia / Data)
@@ -362,7 +364,8 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                     <input
                       type="date"
                       id="custom-day-date"
-                      className="px-3.5 py-2 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-850 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-accent font-medium text-stone-800 dark:text-stone-200"
+                      onClick={(e) => e.currentTarget.showPicker?.()}
+                      className="px-3.5 py-2 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-855 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-accent font-medium text-stone-800 dark:text-stone-200 cursor-pointer"
                     />
                   </div>
                   <button
@@ -375,14 +378,12 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                         let name = nameInput.value.trim();
 
                         if (!name) {
-                          // Calculate default weekday name (e.g. "Sexta-feira (Feriado)")
                           const dateObj = new Date(dateStr + 'T00:00:00');
                           let dayOfWeekName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
                           dayOfWeekName = dayOfWeekName.charAt(0).toUpperCase() + dayOfWeekName.slice(1);
                           name = `${dayOfWeekName} (Feriado)`;
                         }
                         
-                        // Check if already in the list
                         const alreadyIn = diasDaSemana.some(d => d.dataStr === dateStr);
                         if (alreadyIn) {
                           alert('Este dia já foi adicionado.');
