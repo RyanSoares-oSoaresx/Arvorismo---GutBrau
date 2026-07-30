@@ -346,14 +346,15 @@ export default function CollaboratorPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       
       {/* Top Navbar */}
-      <nav className="w-full bg-primary text-white border-b border-primary-hover px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center shadow-md">
-        <div className="flex items-center gap-1.5 sm:gap-2.5">
-          {/* Lúpulo SVG Oficial */}
-          <svg className="w-6 h-6 sm:w-7 sm:h-7 text-accent fill-current flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C11.3 3.5 9.8 5 8 5.8 7 6.2 5.8 6.2 4.8 5.8c.8 1.5 2.2 2.7 4.2 3.2.7.2 1.3.6 1.8 1.2-.5 1.1-1.3 2.1-2.7 2.8-1 .5-2.2.6-3.2.2.8 1.5 2.2 2.7 4.2 3.2 1.5.4 2.7 1.8 3.2 3.3.5-1.5 1.7-2.9 3.2-3.3 2-.5 3.4-1.7 4.2-3.2-1 .4-2.2.3-3.2-.2-1.4-.7-2.2-1.7-2.7-2.8.5-.6 1.1-1 1.8-1.2 2-.5 3.4-1.7 4.2-3.2-1 .4-2.2.4-3.2 0-1.8-.8-3.3-2.3-4-3.8zm0 7c.5.8 1.2 1.5 2.2 2 .8.4 1.8.5 2.8.2-.5.8-1.3 1.5-2.5 1.8-1.2.3-2 1.2-2.5 2.3-.5-1.1-1.3-2-2.5-2.3-1.2-.3-2-1-2.5-1.8 1 .3 2 .2 2.8-.2 1-.5 1.7-1.2 2.2-2z"/>
-          </svg>
-          <span className="font-serif text-sm sm:text-lg font-extrabold tracking-widest text-accent">GUTBRAU</span>
-          <span className="text-[9px] sm:text-3xs font-extrabold uppercase tracking-widest px-1.5 py-0.5 sm:px-2 bg-accent/10 text-accent rounded-md border border-accent/20 ml-1 sm:ml-2">
+      <nav className="w-full bg-primary text-white border-b border-primary-hover px-4 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center shadow-md">
+        <div className="flex items-center gap-2">
+          {/* Logo Original da Cervejaria GutBrau */}
+          <img 
+            src="/logo_ext_verde.png" 
+            alt="GutBrau Cervejaria" 
+            className="h-8 sm:h-11 w-auto object-contain brightness-0 invert" 
+          />
+          <span className="text-[9px] sm:text-3xs font-extrabold uppercase tracking-widest px-1.5 py-0.5 sm:px-2 bg-accent/10 text-accent rounded-md border border-accent/20 ml-1.5">
             Arvorismo
           </span>
         </div>

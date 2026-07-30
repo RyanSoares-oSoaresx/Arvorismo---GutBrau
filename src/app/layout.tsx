@@ -16,6 +16,9 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "GutBrau Cervejaria - Gestão de Escalas",
   description: "Sistema de gerenciamento e consulta de escalas de trabalho da Cervejaria GutBrau.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
