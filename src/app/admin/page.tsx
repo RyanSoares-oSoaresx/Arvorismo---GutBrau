@@ -702,9 +702,10 @@ export default function AdminDashboardPage() {
       )}
 
       {/* Footer */}
-      <footer className="w-full bg-stone-900 text-stone-400 text-xs py-8 px-6 mt-16 border-t border-stone-850 text-center space-y-2.5">
+      <footer className="w-full bg-stone-900 text-stone-400 text-xs py-8 px-6 mt-16 border-t border-stone-850 text-center space-y-1.5">
         <p className="font-serif font-semibold text-accent tracking-wider">GUTBRAU CERVEJARIA</p>
         <p>© 2026 GutBrau Cervejaria. Painel de Controle Interno.</p>
+        <p className="text-[10px] text-stone-500 font-medium mt-1">Desenvolvido por Ryan Soares • Todos os direitos reservados</p>
       </footer>
 
     </div>
