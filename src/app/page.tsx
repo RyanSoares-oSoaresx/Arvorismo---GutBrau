@@ -346,13 +346,13 @@ export default function CollaboratorPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       
       {/* Top Navbar */}
-      <nav className="w-full bg-primary text-white border-b border-primary-hover px-4 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center shadow-md">
+      <nav className="w-full bg-card-bg dark:bg-stone-900 border-b border-card-border dark:border-stone-800 px-4 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-2">
           {/* Logo Original da Cervejaria GutBrau */}
           <img 
             src="/logo_ext_verde.png" 
             alt="GutBrau Cervejaria" 
-            className="h-8 sm:h-11 w-auto object-contain brightness-0 invert" 
+            className="h-8 sm:h-11 w-auto object-contain dark:brightness-0 dark:invert" 
           />
           <span className="text-[9px] sm:text-3xs font-extrabold uppercase tracking-widest px-1.5 py-0.5 sm:px-2 bg-accent/10 text-accent rounded-md border border-accent/20 ml-1.5">
             Arvorismo
@@ -370,7 +370,7 @@ export default function CollaboratorPage() {
       {/* Hero Header with Real GutBrau Background */}
       <div 
         className="w-full py-20 relative flex items-center justify-center text-center px-4 overflow-hidden bg-cover bg-center"
-        style={{ backgroundImage: "url('/hero_gutbrau_1785342650621.png')" }}
+        style={{ backgroundImage: "url('/gutbrau_ambiente.jpg')" }}
       >
         {/* Dark Forest Green Tint Overlay for High Text Readability and Brand Cohesion */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/95 via-primary/85 to-stone-950/95 mix-blend-multiply"></div>

@@ -321,18 +321,18 @@ export default function AdminDashboardPage() {
       <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
         
         {/* Top Navbar */}
-        <nav className="w-full bg-primary text-white border-b border-primary-hover px-4 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center shadow-md">
+        <nav className="w-full bg-card-bg dark:bg-stone-900 border-b border-card-border dark:border-stone-800 px-4 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center shadow-sm">
           <div className="flex items-center gap-2">
             {/* Logo Original da Cervejaria GutBrau */}
             <img 
               src="/logo_ext_verde.png" 
               alt="GutBrau Cervejaria" 
-              className="h-8 sm:h-11 w-auto object-contain brightness-0 invert" 
+              className="h-8 sm:h-11 w-auto object-contain dark:brightness-0 dark:invert" 
             />
           </div>
           <Link 
             href="/"
-            className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-stone-800 hover:bg-stone-750 text-stone-200 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex-shrink-0"
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-stone-100 hover:bg-stone-200 dark:bg-stone-850 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex-shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Voltar
@@ -405,13 +405,13 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       
       {/* Top Navbar */}
-      <nav className="w-full bg-primary text-white border-b border-primary-hover px-4 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center shadow-md">
+      <nav className="w-full bg-card-bg dark:bg-stone-900 border-b border-card-border dark:border-stone-800 px-4 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-2">
           {/* Logo Original da Cervejaria GutBrau */}
           <img 
             src="/logo_ext_verde.png" 
             alt="GutBrau Cervejaria" 
-            className="h-8 sm:h-11 w-auto object-contain brightness-0 invert" 
+            className="h-8 sm:h-11 w-auto object-contain dark:brightness-0 dark:invert" 
           />
           <span className="text-[10px] sm:text-2xs font-semibold px-1.5 py-0.5 sm:px-2 bg-accent/10 text-accent rounded-full border border-accent/20 uppercase tracking-widest ml-1.5 hidden sm:inline-block">
             Administrador
@@ -420,7 +420,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center gap-1.5 sm:gap-2">
           <Link 
             href="/"
-            className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 bg-stone-850 hover:bg-stone-800 dark:bg-stone-900 dark:hover:bg-stone-850 text-stone-200 text-[10px] sm:text-xs font-bold rounded-xl transition-all flex-shrink-0"
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 bg-stone-100 hover:bg-stone-200 dark:bg-stone-850 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 text-[10px] sm:text-xs font-bold rounded-xl transition-all flex-shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Ver Portal
