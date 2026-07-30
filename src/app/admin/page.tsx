@@ -256,17 +256,17 @@ export default function AdminDashboardPage() {
       <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
         
         {/* Top Navbar */}
-        <nav className="w-full bg-primary text-white border-b border-primary-hover px-6 py-4 flex justify-between items-center shadow-md">
-          <div className="flex items-center gap-2.5">
+        <nav className="w-full bg-primary text-white border-b border-primary-hover px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center shadow-md">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             {/* Lúpulo SVG Oficial */}
-            <svg className="w-7 h-7 text-accent fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg className="w-6 h-6 sm:w-7 sm:h-7 text-accent fill-current flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 2C11.3 3.5 9.8 5 8 5.8 7 6.2 5.8 6.2 4.8 5.8c.8 1.5 2.2 2.7 4.2 3.2.7.2 1.3.6 1.8 1.2-.5 1.1-1.3 2.1-2.7 2.8-1 .5-2.2.6-3.2.2.8 1.5 2.2 2.7 4.2 3.2 1.5.4 2.7 1.8 3.2 3.3.5-1.5 1.7-2.9 3.2-3.3 2-.5 3.4-1.7 4.2-3.2-1 .4-2.2.3-3.2-.2-1.4-.7-2.2-1.7-2.7-2.8.5-.6 1.1-1 1.8-1.2 2-.5 3.4-1.7 4.2-3.2-1 .4-2.2.4-3.2 0-1.8-.8-3.3-2.3-4-3.8zm0 7c.5.8 1.2 1.5 2.2 2 .8.4 1.8.5 2.8.2-.5.8-1.3 1.5-2.5 1.8-1.2.3-2 1.2-2.5 2.3-.5-1.1-1.3-2-2.5-2.3-1.2-.3-2-1-2.5-1.8 1 .3 2 .2 2.8-.2 1-.5 1.7-1.2 2.2-2z"/>
             </svg>
-            <span className="font-serif text-lg font-extrabold tracking-widest text-accent">GUTBRAU</span>
+            <span className="font-serif text-sm sm:text-lg font-extrabold tracking-widest text-accent">GUTBRAU</span>
           </div>
           <Link 
             href="/"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-800 hover:bg-stone-750 text-stone-200 text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-stone-800 hover:bg-stone-750 text-stone-200 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex-shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Voltar
@@ -339,28 +339,28 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       
       {/* Top Navbar */}
-      <nav className="w-full bg-primary text-white border-b border-primary-hover px-6 py-4 flex justify-between items-center shadow-md">
-        <div className="flex items-center gap-2.5">
+      <nav className="w-full bg-primary text-white border-b border-primary-hover px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center shadow-md">
+        <div className="flex items-center gap-1.5 sm:gap-2.5">
           {/* Lúpulo SVG Oficial */}
-          <svg className="w-7 h-7 text-accent fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg className="w-6 h-6 sm:w-7 sm:h-7 text-accent fill-current flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2C11.3 3.5 9.8 5 8 5.8 7 6.2 5.8 6.2 4.8 5.8c.8 1.5 2.2 2.7 4.2 3.2.7.2 1.3.6 1.8 1.2-.5 1.1-1.3 2.1-2.7 2.8-1 .5-2.2.6-3.2.2.8 1.5 2.2 2.7 4.2 3.2 1.5.4 2.7 1.8 3.2 3.3.5-1.5 1.7-2.9 3.2-3.3 2-.5 3.4-1.7 4.2-3.2-1 .4-2.2.3-3.2-.2-1.4-.7-2.2-1.7-2.7-2.8.5-.6 1.1-1 1.8-1.2 2-.5 3.4-1.7 4.2-3.2-1 .4-2.2.4-3.2 0-1.8-.8-3.3-2.3-4-3.8zm0 7c.5.8 1.2 1.5 2.2 2 .8.4 1.8.5 2.8.2-.5.8-1.3 1.5-2.5 1.8-1.2.3-2 1.2-2.5 2.3-.5-1.1-1.3-2-2.5-2.3-1.2-.3-2-1-2.5-1.8 1 .3 2 .2 2.8-.2 1-.5 1.7-1.2 2.2-2z"/>
           </svg>
-          <span className="font-serif text-lg font-extrabold tracking-widest text-accent">GUTBRAU</span>
-          <span className="text-2xs font-semibold px-2 py-0.5 bg-accent/10 text-accent rounded-full border border-accent/20 uppercase tracking-widest ml-1 hidden sm:inline-block">
+          <span className="font-serif text-sm sm:text-lg font-extrabold tracking-widest text-accent">GUTBRAU</span>
+          <span className="text-[10px] sm:text-2xs font-semibold px-1.5 py-0.5 sm:px-2 bg-accent/10 text-accent rounded-full border border-accent/20 uppercase tracking-widest ml-1 hidden sm:inline-block">
             Administrador
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <Link 
             href="/"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-stone-850 hover:bg-stone-800 dark:bg-stone-900 dark:hover:bg-stone-850 text-stone-200 text-xs font-bold rounded-xl transition-all"
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 bg-stone-850 hover:bg-stone-800 dark:bg-stone-900 dark:hover:bg-stone-850 text-stone-200 text-[10px] sm:text-xs font-bold rounded-xl transition-all flex-shrink-0"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Ver Portal
           </Link>
           <button 
             onClick={handleLogout}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-red-650 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-red-900/15"
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 bg-red-650 hover:bg-red-700 text-white text-[10px] sm:text-xs font-bold rounded-xl transition-all shadow-md shadow-red-900/15 flex-shrink-0"
           >
             <LogOut className="w-3.5 h-3.5" />
             Sair
@@ -589,9 +589,9 @@ export default function AdminDashboardPage() {
                   
                   {/* Saturday Table */}
                   {(() => {
-                    const monday = new Date(exportEscala.data_inicio + 'T00:00:00');
-                    const satDate = new Date(monday);
-                    satDate.setDate(monday.getDate() + 5);
+                    const sunDate = new Date(exportEscala.data_fim + 'T00:00:00');
+                    const satDate = new Date(sunDate);
+                    satDate.setDate(sunDate.getDate() - 1);
                     const satStr = satDate.toISOString().split('T')[0];
                     const rows = getTableRowsForDate(satStr, exportEscala.itens);
                     const header = `Arvorismo - Sábado ${String(satDate.getDate()).padStart(2, '0')}/${String(satDate.getMonth() + 1).padStart(2, '0')}`;
@@ -600,10 +600,8 @@ export default function AdminDashboardPage() {
 
                   {/* Sunday Table */}
                   {(() => {
-                    const monday = new Date(exportEscala.data_inicio + 'T00:00:00');
-                    const sunDate = new Date(monday);
-                    sunDate.setDate(monday.getDate() + 6);
-                    const sunStr = sunDate.toISOString().split('T')[0];
+                    const sunStr = exportEscala.data_fim;
+                    const sunDate = new Date(sunStr + 'T00:00:00');
                     const rows = getTableRowsForDate(sunStr, exportEscala.itens);
                     const header = `Arvorismo - Domingo ${String(sunDate.getDate()).padStart(2, '0')}/${String(sunDate.getMonth() + 1).padStart(2, '0')}`;
                     return renderExportTable(header, rows);

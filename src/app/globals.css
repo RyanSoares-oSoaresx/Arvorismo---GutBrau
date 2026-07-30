@@ -24,6 +24,16 @@
   --color-text-muted: var(--text-muted);
   --font-serif: var(--font-cinzel);
   --font-sans: var(--font-jakarta);
+
+  --font-size-3xs: 0.625rem;
+  --font-size-2xs: 0.725rem;
+  --font-size-3.5xl: 2rem;
+
+  --spacing-8\.5: 2.125rem;
+  --spacing-5\.5: 1.375rem;
+  --spacing-4\.5: 1.125rem;
+  --border-width-3: 3px;
+  --backdrop-blur-3xs: blur(2px);
 }
 
 @media (prefers-color-scheme: dark) {

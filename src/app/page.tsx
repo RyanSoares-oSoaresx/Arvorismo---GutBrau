@@ -298,10 +298,10 @@ export default function CollaboratorPage() {
                 {itemsByDate[dateStr].map(item => (
                   <div 
                     key={item.id}
-                    className="flex justify-between items-start gap-4 p-3.5 bg-white dark:bg-stone-950 border border-stone-150 dark:border-stone-850 rounded-xl hover:shadow-sm transition-shadow duration-150"
+                    className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 p-3.5 bg-white dark:bg-stone-950 border border-stone-150 dark:border-stone-850 rounded-xl hover:shadow-sm transition-shadow duration-150"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8.5 h-8.5 rounded-full bg-primary/10 dark:bg-stone-900 border border-primary/20 dark:border-stone-800 flex items-center justify-center text-primary dark:text-accent font-bold text-sm">
+                      <div className="w-8.5 h-8.5 rounded-full bg-primary/10 dark:bg-stone-900 border border-primary/20 dark:border-stone-800 flex items-center justify-center text-primary dark:text-accent font-bold text-sm flex-shrink-0">
                         {item.colaborador?.nome.charAt(0)}
                       </div>
                       <div>
@@ -313,7 +313,7 @@ export default function CollaboratorPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-2xs bg-stone-50 dark:bg-stone-900 text-stone-600 dark:text-stone-400 px-2 py-0.5 rounded-md border border-stone-200/50 dark:border-stone-800">
+                    <div className="flex items-center gap-1.5 text-2xs bg-stone-50 dark:bg-stone-900 text-stone-600 dark:text-stone-400 px-2 py-0.5 rounded-md border border-stone-200/50 dark:border-stone-800 self-start sm:self-auto flex-shrink-0">
                       <Clock className="w-3 h-3 text-accent" />
                       <span>{item.turno}</span>
                     </div>
@@ -346,22 +346,22 @@ export default function CollaboratorPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       
       {/* Top Navbar */}
-      <nav className="w-full bg-primary text-white border-b border-primary-hover px-6 py-4 flex justify-between items-center shadow-md">
-        <div className="flex items-center gap-2.5">
+      <nav className="w-full bg-primary text-white border-b border-primary-hover px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center shadow-md">
+        <div className="flex items-center gap-1.5 sm:gap-2.5">
           {/* Lúpulo SVG Oficial */}
-          <svg className="w-7 h-7 text-accent fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg className="w-6 h-6 sm:w-7 sm:h-7 text-accent fill-current flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2C11.3 3.5 9.8 5 8 5.8 7 6.2 5.8 6.2 4.8 5.8c.8 1.5 2.2 2.7 4.2 3.2.7.2 1.3.6 1.8 1.2-.5 1.1-1.3 2.1-2.7 2.8-1 .5-2.2.6-3.2.2.8 1.5 2.2 2.7 4.2 3.2 1.5.4 2.7 1.8 3.2 3.3.5-1.5 1.7-2.9 3.2-3.3 2-.5 3.4-1.7 4.2-3.2-1 .4-2.2.3-3.2-.2-1.4-.7-2.2-1.7-2.7-2.8.5-.6 1.1-1 1.8-1.2 2-.5 3.4-1.7 4.2-3.2-1 .4-2.2.4-3.2 0-1.8-.8-3.3-2.3-4-3.8zm0 7c.5.8 1.2 1.5 2.2 2 .8.4 1.8.5 2.8.2-.5.8-1.3 1.5-2.5 1.8-1.2.3-2 1.2-2.5 2.3-.5-1.1-1.3-2-2.5-2.3-1.2-.3-2-1-2.5-1.8 1 .3 2 .2 2.8-.2 1-.5 1.7-1.2 2.2-2z"/>
           </svg>
-          <span className="font-serif text-lg font-extrabold tracking-widest text-accent">GUTBRAU</span>
-          <span className="text-3xs font-extrabold uppercase tracking-widest px-2 py-0.5 bg-accent/10 text-accent rounded-md border border-accent/20 ml-2">
+          <span className="font-serif text-sm sm:text-lg font-extrabold tracking-widest text-accent">GUTBRAU</span>
+          <span className="text-[9px] sm:text-3xs font-extrabold uppercase tracking-widest px-1.5 py-0.5 sm:px-2 bg-accent/10 text-accent rounded-md border border-accent/20 ml-1 sm:ml-2">
             Arvorismo
           </span>
         </div>
         <Link 
           href="/admin"
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200 shadow-md shadow-accent/20"
+          className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-4 sm:py-2 bg-accent hover:bg-accent-hover text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200 shadow-md shadow-accent/20 flex-shrink-0"
         >
-          <Lock className="w-3.5 h-3.5" />
+          <Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           Painel Admin
         </Link>
       </nav>
@@ -517,14 +517,14 @@ export default function CollaboratorPage() {
                       >
                         <button
                           onClick={() => handleToggleEscala(escala.id)}
-                          className="w-full flex items-center justify-between p-4.5 hover:bg-stone-50 dark:hover:bg-stone-950/40 transition-colors duration-150 text-left"
+                          className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-4.5 hover:bg-stone-50 dark:hover:bg-stone-950/40 transition-colors duration-150 text-left"
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-xl ${escala.publicada ? 'bg-primary/10 text-primary dark:text-accent' : 'bg-stone-100 text-stone-400 dark:bg-stone-950'}`}>
+                            <div className={`p-2 rounded-xl flex-shrink-0 ${escala.publicada ? 'bg-primary/10 text-primary dark:text-accent' : 'bg-stone-100 text-stone-400 dark:bg-stone-950'}`}>
                               <CalendarDays className="w-5 h-5" />
                             </div>
                             <div>
-                              <p className="font-bold text-sm text-stone-850 dark:text-stone-100">
+                              <p className="font-bold text-xs sm:text-sm text-stone-850 dark:text-stone-100">
                                 Escala de {formatDate(escala.data_inicio, true)} a {formatDate(escala.data_fim, true)}
                               </p>
                               <p className="text-3xs text-stone-500 dark:text-stone-400 font-semibold uppercase tracking-wider mt-0.5">
@@ -533,7 +533,7 @@ export default function CollaboratorPage() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pl-11 sm:pl-0">
                             {escala.sabado_cancelado && escala.domingo_cancelado ? (
                               <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider bg-red-500/10 text-red-700 border border-red-500/20">
                                 Cancelada
@@ -548,9 +548,9 @@ export default function CollaboratorPage() {
                               </span>
                             )}
                             {isExpanded ? (
-                              <ChevronUp className="w-5 h-5 text-stone-400" />
+                              <ChevronUp className="w-5 h-5 text-stone-400 flex-shrink-0" />
                             ) : (
-                              <ChevronDown className="w-5 h-5 text-stone-400" />
+                              <ChevronDown className="w-5 h-5 text-stone-400 flex-shrink-0" />
                             )}
                           </div>
                         </button>
