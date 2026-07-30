@@ -306,7 +306,7 @@ export default function CollaboratorPage() {
                       </div>
                       <div>
                         <p className="font-semibold text-sm text-stone-850 dark:text-stone-200">
-                          {item.colaborador?.nome}
+                          {item.colaborador?.nome}{item.treinamento ? '***' : ''}
                         </p>
                         <p className="text-xs text-accent font-semibold">
                           {getDisplayFuncao(item.funcao, item.colaborador_id, itemsByDate[dateStr])}

@@ -381,6 +381,7 @@ export const db = {
         data: item.data,
         turno: item.turno,
         funcao: item.funcao,
+        treinamento: (item as any).treinamento || false,
       }));
 
       if (itemsToInsert.length > 0) {

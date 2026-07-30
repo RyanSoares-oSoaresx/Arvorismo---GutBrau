@@ -56,7 +56,8 @@ export default function ShareWhatsApp({ escala }: ShareWhatsAppProps) {
           text += `❌ *OPERÇÃO SUSPENSA (CLIMA / FORÇA MAIOR)*\n\n`;
         } else {
           itemsByDate[dateStr].forEach((item) => {
-            const collabName = item.colaborador?.nome || 'Colaborador';
+            const rawName = item.colaborador?.nome || 'Colaborador';
+            const collabName = item.treinamento ? `${rawName}***` : rawName;
             const displayFuncao = getDisplayFuncao(item.funcao, item.colaborador_id, itemsByDate[dateStr]);
             text += `• *${collabName}*: ${displayFuncao} (${item.turno})\n`;
           });

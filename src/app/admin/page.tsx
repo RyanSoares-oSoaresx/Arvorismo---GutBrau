@@ -62,18 +62,83 @@ export default function AdminDashboardPage() {
 
   const getTableRowsForDate = (dateStr: string, items: any[]) => {
     const dayItems = items.filter(item => item.data === dateStr);
-    const resgatistas = dayItems.filter(item => item.funcao === 'Resgatista');
-    const caixas = dayItems.filter(item => item.funcao === 'Caixa');
-    const monitores = dayItems.filter(item => item.funcao === 'Monitor');
-
-    return {
-      resgatista1: resgatistas[0]?.colaborador?.nome || '',
-      resgatista2: resgatistas[1]?.colaborador?.nome || '',
-      monitor1: monitores[0]?.colaborador?.nome || '',
-      monitor2: monitores[1]?.colaborador?.nome || '',
-      monitor3: monitores[2]?.colaborador?.nome || '',
-      caixa: caixas[0]?.colaborador?.nome || '',
+    
+    const result = {
+      resgatista1: '',
+      resgatista2: '',
+      monitor1: '',
+      monitor2: '',
+      monitor3: '',
+      caixa: '',
     };
+    
+    const genericResgatistas: any[] = [];
+    const genericMonitores: any[] = [];
+    const genericCaixas: any[] = [];
+    
+    dayItems.forEach(item => {
+      const func = (item.funcao || '').trim();
+      const name = item.colaborador?.nome || '';
+      const displayName = item.treinamento ? `${name}***` : name;
+      
+      if (func === 'Resgatista 1') {
+        result.resgatista1 = displayName;
+      } else if (func === 'Resgatista 2') {
+        result.resgatista2 = displayName;
+      } else if (func === 'Monitor I (Tirolesa)' || func === 'Monitor 1 - Tirolesa') {
+        result.monitor1 = displayName;
+      } else if (func === 'Monitor II (Base)' || func === 'Monitor 2 - Base') {
+        result.monitor2 = displayName;
+      } else if (func === 'Monitor III (Bike/Caixa)' || func === 'Monitor 3 Base/Caixa') {
+        result.monitor3 = displayName;
+      } else if (func === 'Caixa') {
+        result.caixa = displayName;
+      } else if (func === 'Resgatista') {
+        genericResgatistas.push(item);
+      } else if (func === 'Monitor') {
+        genericMonitores.push(item);
+      } else {
+        if (func.toLowerCase().includes('resgatista')) {
+          genericResgatistas.push(item);
+        } else if (func.toLowerCase().includes('caixa')) {
+          genericCaixas.push(item);
+        } else if (func.toLowerCase().includes('monitor')) {
+          genericMonitores.push(item);
+        }
+      }
+    });
+    
+    genericResgatistas.forEach(item => {
+      const name = item.colaborador?.nome || '';
+      const displayName = item.treinamento ? `${name}***` : name;
+      if (!result.resgatista1) {
+        result.resgatista1 = displayName;
+      } else if (!result.resgatista2) {
+        result.resgatista2 = displayName;
+      }
+    });
+    
+    genericCaixas.forEach(item => {
+      const name = item.colaborador?.nome || '';
+      const displayName = item.treinamento ? `${name}***` : name;
+      if (!result.caixa) {
+        result.caixa = displayName;
+      }
+    });
+
+    genericMonitores.forEach(item => {
+      const name = item.colaborador?.nome || '';
+      const displayName = item.treinamento ? `${name}***` : name;
+      if (!result.monitor1) {
+        result.monitor1 = displayName;
+      } else if (!result.monitor2) {
+        result.monitor2 = displayName;
+      } else if (!result.monitor3) {
+        result.monitor3 = displayName;
+      }
+    });
+
+    return result;
   };
 
   const renderExportTable = (title: string, data: ReturnType<typeof getTableRowsForDate>) => {

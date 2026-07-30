@@ -58,6 +58,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
     data: string;
     turno: string;
     funcao: string;
+    treinamento?: boolean;
   }[]>([]);
   const [saveLoading, setSaveLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -124,6 +125,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
             data: item.data,
             turno: item.turno,
             funcao: item.funcao,
+            treinamento: item.treinamento || false,
           }));
           setItens(mappedItens);
           calculateWeekDays(satStr, mappedItens);
@@ -203,7 +205,8 @@ export default function EditEscalaPage({ params }: EditPageProps) {
         colaborador_id: firstCollab.id,
         data: dataStr,
         turno: PRESET_TURNOS[0],
-        funcao: firstCollab.funcao_padrao || 'Monitor'
+        funcao: firstCollab.funcao_padrao || 'Monitor',
+        treinamento: false
       }
     ]);
   };
@@ -212,7 +215,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
     setItens(prev => prev.filter((_, idx) => idx !== index));
   };
 
-  const handleUpdateShift = (index: number, field: string, value: string) => {
+  const handleUpdateShift = (index: number, field: string, value: any) => {
     setItens(prev => prev.map((item, idx) => {
       if (idx !== index) return item;
       
@@ -256,6 +259,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
         data: item.data,
         turno: item.turno,
         funcao: item.funcao,
+        treinamento: item.treinamento || false,
       }));
 
       await db.saveEscala(escalaPayload, itemsPayload);
@@ -562,7 +566,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                                 </div>
 
                                 {/* Shift Time */}
-                                <div className="sm:col-span-4 flex items-center gap-2">
+                                <div className="sm:col-span-3 flex items-center gap-2">
                                   <Clock className="w-4 h-4 text-stone-400 flex-shrink-0" />
                                   <input
                                     type="text"
@@ -578,25 +582,46 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                                   </datalist>
                                 </div>
 
-                                {/* Role Override */}
+                                {/* Role Selection Dropdown */}
                                 <div className="sm:col-span-3 flex items-center gap-2">
                                   <Briefcase className="w-4 h-4 text-stone-400 flex-shrink-0" />
-                                  <input
-                                    type="text"
-                                    required
+                                  <select
                                     value={item.funcao}
                                     onChange={(e) => handleUpdateShift(item.globalIndex, 'funcao', e.target.value)}
-                                    placeholder="Ex: Caixa"
                                     className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium"
-                                  />
+                                  >
+                                    <option value="Monitor">Monitor (Automático)</option>
+                                    <option value="Resgatista">Resgatista (Automático)</option>
+                                    <option value="Caixa">Caixa (Automático)</option>
+                                    <option value="Resgatista 1">Resgatista 1</option>
+                                    <option value="Resgatista 2">Resgatista 2</option>
+                                    <option value="Monitor I (Tirolesa)">Monitor I (Tirolesa)</option>
+                                    <option value="Monitor II (Base)">Monitor II (Base)</option>
+                                    <option value="Monitor III (Bike/Caixa)">Monitor III (Bike/Caixa)</option>
+                                    {item.funcao && !['Monitor', 'Resgatista', 'Caixa', 'Resgatista 1', 'Resgatista 2', 'Monitor I (Tirolesa)', 'Monitor II (Base)', 'Monitor III (Bike/Caixa)'].includes(item.funcao) && (
+                                      <option value={item.funcao}>{item.funcao}</option>
+                                    )}
+                                  </select>
                                 </div>
 
-                                {/* Delete Shift */}
-                                <div className="sm:col-span-1 flex justify-end">
+                                {/* Actions */}
+                                <div className="sm:col-span-2 flex items-center justify-end gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateShift(item.globalIndex, 'treinamento', !item.treinamento)}
+                                    className={`px-2 py-1.5 rounded-lg border transition-all text-[9px] font-extrabold uppercase tracking-wider flex items-center justify-center flex-1 sm:flex-initial select-none ${
+                                      item.treinamento 
+                                        ? 'bg-amber-500/20 text-amber-700 border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20' 
+                                        : 'bg-stone-100 text-stone-500 border-stone-200 dark:bg-stone-900 dark:text-stone-400 dark:border-stone-800 hover:bg-stone-200'
+                                    }`}
+                                    title={item.treinamento ? 'Remover marcação de treinamento' : 'Marcar como em treinamento (Gabriel***)'}
+                                  >
+                                    Treino
+                                  </button>
                                   <button
                                     type="button"
                                     onClick={() => handleRemoveShift(item.globalIndex)}
-                                    className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-650 dark:text-red-400 rounded-lg transition-all"
+                                    className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-650 dark:text-red-400 rounded-lg transition-all flex-shrink-0"
                                     title="Remover turno"
                                   >
                                     <Trash2 className="w-4 h-4" />

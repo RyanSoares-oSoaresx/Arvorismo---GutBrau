@@ -25,6 +25,7 @@ export interface EscalaItem {
   data: string;        // YYYY-MM-DD (specific day, e.g. Friday, Saturday, Sunday)
   turno: string;       // e.g. '10:00 - 18:00'
   funcao: string;      // e.g. 'Caixa'
+  treinamento?: boolean;
   created_at?: string;
   // Joined relation fields for convenience
   colaborador?: Colaborador;

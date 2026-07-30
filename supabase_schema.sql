@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS escala_itens (
     data DATE NOT NULL, -- Dia específico do turno (ex: sábado, domingo)
     turno TEXT NOT NULL, -- Horário de trabalho (ex: '10:00 - 18:00')
     funcao TEXT NOT NULL, -- Função exercida naquele dia (ex: 'Caixa')
+    treinamento BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
