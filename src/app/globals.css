@@ -10,6 +10,7 @@
   --card-bg: #ffffff;
   --card-border: #e7e3dc;
   --text-muted: #575249;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -47,6 +48,7 @@
     --card-bg: #0c1410;
     --card-border: #15241b;
     --text-muted: #95a399;
+    color-scheme: dark;
   }
 }
 

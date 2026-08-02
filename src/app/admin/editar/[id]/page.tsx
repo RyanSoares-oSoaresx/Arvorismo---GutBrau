@@ -923,10 +923,10 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                                     disabled={finalizada}
                                     value={item.colaborador_id}
                                     onChange={(e) => handleUpdateShift(item.globalIndex, 'colaborador_id', e.target.value)}
-                                    className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60"
+                                    className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60 text-stone-900 dark:text-stone-100"
                                   >
                                     {colaboradores.map(c => (
-                                      <option key={c.id} value={c.id}>{c.nome}</option>
+                                      <option key={c.id} value={c.id} className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">{c.nome}</option>
                                     ))}
                                   </select>
                                 </div>
@@ -940,7 +940,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                                     value={item.turno}
                                     onChange={(e) => handleUpdateShift(item.globalIndex, 'turno', e.target.value)}
                                     placeholder="Ex: 10:00 - 18:00"
-                                    className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60"
+                                    className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60 text-stone-900 dark:text-stone-100"
                                     list={`turnos-datalist-${dia.dataStr}`}
                                   />
                                   <datalist id={`turnos-datalist-${dia.dataStr}`}>
@@ -954,16 +954,16 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                                     disabled={finalizada}
                                     value={item.funcao}
                                     onChange={(e) => handleUpdateShift(item.globalIndex, 'funcao', e.target.value)}
-                                    className="w-full bg-white dark:bg-stone-955 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60"
+                                    className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60 text-stone-900 dark:text-stone-100"
                                   >
-                                    <option value="Monitor">Monitor (Automático)</option>
-                                    <option value="Resgatista">Resgatista (Automático)</option>
-                                    <option value="Caixa">Caixa (Automático)</option>
-                                    <option value="Resgatista 1">Resgatista 1</option>
-                                    <option value="Resgatista 2">Resgatista 2</option>
-                                    <option value="Monitor I (Tirolesa)">Monitor I (Tirolesa)</option>
-                                    <option value="Monitor II (Base)">Monitor II (Base)</option>
-                                    <option value="Monitor III (Bike/Caixa)">Monitor III (Bike/Caixa)</option>
+                                    <option value="Monitor" className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">Monitor (Automático)</option>
+                                    <option value="Resgatista" className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">Resgatista (Automático)</option>
+                                    <option value="Caixa" className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">Caixa (Automático)</option>
+                                    <option value="Resgatista 1" className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">Resgatista 1</option>
+                                    <option value="Resgatista 2" className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">Resgatista 2</option>
+                                    <option value="Monitor I (Tirolesa)" className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">Monitor I (Tirolesa)</option>
+                                    <option value="Monitor II (Base)" className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">Monitor II (Base)</option>
+                                    <option value="Monitor III (Bike/Caixa)" className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">Monitor III (Bike/Caixa)</option>
                                   </select>
                                 </div>
 
