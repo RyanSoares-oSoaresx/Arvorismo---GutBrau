@@ -35,6 +35,7 @@ export default function ManageColaboradoresPage() {
   const [telefone, setTelefone] = useState('');
   const [funcao, setFuncao] = useState('Monitor');
   const [ativo, setAtivo] = useState(true);
+  const [pontos, setPontos] = useState(10);
   const [formError, setFormError] = useState('');
   const [saveLoading, setSaveLoading] = useState(false);
 
@@ -78,6 +79,7 @@ export default function ManageColaboradoresPage() {
     setTelefone(colaborador.telefone || '');
     setFuncao(colaborador.funcao_padrao);
     setAtivo(colaborador.ativo);
+    setPontos(colaborador.pontos !== undefined && colaborador.pontos !== null ? colaborador.pontos : 10);
     setShowForm(true);
     setFormError('');
   };
@@ -89,6 +91,7 @@ export default function ManageColaboradoresPage() {
     setTelefone('');
     setFuncao('Monitor');
     setAtivo(true);
+    setPontos(10);
     setFormError('');
   };
 
@@ -108,6 +111,7 @@ export default function ManageColaboradoresPage() {
         telefone: telefone.trim() || undefined,
         funcao_padrao: funcao,
         ativo,
+        pontos,
       };
       
       if (editingId) {
@@ -123,6 +127,27 @@ export default function ManageColaboradoresPage() {
       setFormError('Erro ao salvar. Verifique a conexão com o banco de dados.');
     } finally {
       setSaveLoading(false);
+    }
+  };
+
+  const handleUpdatePoints = async (id: string, increment: number) => {
+    try {
+      const col = colaboradores.find(c => c.id === id);
+      if (!col) return;
+      
+      const currentPoints = col.pontos !== undefined && col.pontos !== null ? col.pontos : 10;
+      const updatedPoints = Math.max(0, currentPoints + increment);
+      
+      const payload = {
+        ...col,
+        pontos: updatedPoints
+      };
+      
+      await db.saveColaborador(payload);
+      setColaboradores(prev => prev.map(c => c.id === id ? { ...c, pontos: updatedPoints } : c));
+    } catch (err) {
+      console.error('Erro ao atualizar pontos:', err);
+      alert('Erro ao atualizar pontuação.');
     }
   };
 
@@ -246,6 +271,21 @@ export default function ManageColaboradoresPage() {
               </select>
             </div>
 
+            <div>
+              <label htmlFor="collab-points" className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2">
+                Pontos (Score Interno)
+              </label>
+              <input
+                id="collab-points"
+                type="number"
+                min="0"
+                max="100"
+                value={pontos}
+                onChange={(e) => setPontos(parseInt(e.target.value) || 0)}
+                className="w-full px-4 py-2.5 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+              />
+            </div>
+
             <div className="flex items-center gap-3 md:pt-8">
               <input
                 id="collab-active"
@@ -321,6 +361,9 @@ export default function ManageColaboradoresPage() {
                       <Briefcase className="w-3 h-3" />
                       {c.funcao_padrao}
                     </span>
+                    <span className="inline-flex items-center gap-1 mt-1 ml-2 px-2.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-semibold rounded-full">
+                      ⭐ {c.pontos ?? 10} pts
+                    </span>
                   </div>
                 </div>
 
@@ -342,8 +385,46 @@ export default function ManageColaboradoresPage() {
                 </div>
               </div>
 
+              {/* Quick Points Adjustment */}
+              <div className="mt-4 pt-3 border-t border-stone-105 dark:border-stone-800/40 flex items-center justify-between">
+                <span className="text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wider">Pontuação</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleUpdatePoints(c.id, -2)}
+                    className="px-2 py-0.5 bg-red-500/10 hover:bg-red-500/20 text-red-650 dark:text-red-400 text-[10px] font-extrabold uppercase rounded-lg transition-all"
+                    title="Falta (Deduz 2 pontos)"
+                  >
+                    Falta (-2)
+                  </button>
+                  <button
+                    onClick={() => handleUpdatePoints(c.id, -1)}
+                    className="w-6 py-0.5 bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-stone-600 dark:text-stone-300 text-[10px] font-bold rounded-lg transition-all"
+                    title="Deduzir 1 ponto"
+                  >
+                    -1
+                  </button>
+                  <span className="text-xs font-bold text-stone-850 dark:text-stone-100 px-1.5 min-w-[20px] text-center font-mono">
+                    {c.pontos ?? 10}
+                  </span>
+                  <button
+                    onClick={() => handleUpdatePoints(c.id, 1)}
+                    className="w-6 py-0.5 bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-stone-600 dark:text-stone-300 text-[10px] font-bold rounded-lg transition-all"
+                    title="Adicionar 1 ponto"
+                  >
+                    +1
+                  </button>
+                  <button
+                    onClick={() => handleUpdatePoints(c.id, 2)}
+                    className="px-2 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold uppercase rounded-lg transition-all"
+                    title="Presença Extra (Adiciona 2 pontos)"
+                  >
+                    Extra (+2)
+                  </button>
+                </div>
+              </div>
+
               {c.telefone && (
-                <div className="mt-4 pt-3 border-t border-stone-100 dark:border-stone-800/40 flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400 font-medium">
+                <div className="mt-3 pt-2.5 border-t border-stone-100 dark:border-stone-800/40 flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400 font-medium">
                   <Phone className="w-3.5 h-3.5 text-stone-400" />
                   <span>{c.telefone}</span>
                 </div>

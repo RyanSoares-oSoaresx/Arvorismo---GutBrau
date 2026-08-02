@@ -5,6 +5,7 @@ export interface Colaborador {
   funcao_padrao: string;
   ativo: boolean;
   created_at?: string;
+  pontos?: number;
 }
 
 export interface Escala {

@@ -8,8 +8,12 @@ CREATE TABLE IF NOT EXISTS colaboradores (
     telefone TEXT,
     funcao_padrao TEXT DEFAULT 'Atendimento',
     ativo BOOLEAN NOT NULL DEFAULT true,
+    pontos INTEGER DEFAULT 10,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
+
+-- MIGRATION: Execute o comando abaixo no Editor SQL do Supabase se a tabela já existir:
+-- ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS pontos INTEGER DEFAULT 10;
 
 -- Habilitar Row Level Security (RLS) se desejado.
 -- Para facilidade inicial, as regras de RLS podem ser simplificadas ou desativadas.

@@ -13,11 +13,184 @@ import {
   Clock,
   User,
   AlertTriangle,
-  Briefcase
+  Briefcase,
+  Sparkles,
+  ChevronUp,
+  ChevronDown,
+  Wand2,
+  Check,
+  CheckCircle
 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { Colaborador, Escala, EscalaItem } from '@/types/database';
 import { formatDate } from '@/lib/utils';
+
+interface AvailabilityParseResult {
+  nomeOriginal: string;
+  colaborador: Colaborador | null;
+  sabado: boolean;
+  domingo: boolean;
+  status: 'sucesso' | 'nao_encontrado' | 'ambiguo';
+  candidatos?: Colaborador[];
+}
+
+const cleanString = (str: string) => {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .trim();
+};
+
+const parseAvailability = (text: string, activeCollabs: Colaborador[]): AvailabilityParseResult[] => {
+  if (!text) return [];
+  const lines = text.split('\n');
+  const results: AvailabilityParseResult[] = [];
+  
+  for (let line of lines) {
+    line = line.trim();
+    if (!line) continue;
+    if (line.includes('⬇️') || line.includes('👇')) continue;
+    if (line.toLowerCase().includes('bom dia') || line.toLowerCase().includes('favor colocar') || line.toLowerCase().includes('disponibilidade')) continue;
+    
+    let parts: string[] = [];
+    if (line.includes('-')) {
+      parts = line.split('-');
+    } else if (line.includes(':')) {
+      parts = line.split(':');
+    } else {
+      const matchIndex = line.toLowerCase().search(/\b(sabado|sábado|domingo|sab|dom)\b/);
+      if (matchIndex !== -1) {
+        parts = [line.substring(0, matchIndex), line.substring(matchIndex)];
+      } else {
+        parts = [line];
+      }
+    }
+    
+    const rawName = parts[0]?.trim();
+    const rawDays = parts[1]?.trim() || '';
+    
+    if (!rawName || rawName.length < 2) continue;
+    
+    const cleanDays = cleanString(rawDays);
+    const cleanLine = cleanString(line);
+    
+    let hasSabado = false;
+    let hasDomingo = false;
+    
+    const daysSource = cleanDays || cleanLine;
+    if (daysSource.includes('sabado') || daysSource.includes('sab') || daysSource.includes('sabs')) {
+      hasSabado = true;
+    }
+    if (daysSource.includes('domingo') || daysSource.includes('dom') || daysSource.includes('doms')) {
+      hasDomingo = true;
+    }
+    if (daysSource.includes('fim de semana') || daysSource.includes('fds') || daysSource.includes('ambos') || daysSource.includes('sábado e domingo') || daysSource.includes('sabado e domingo') || daysSource.includes('sab e dom')) {
+      hasSabado = true;
+      hasDomingo = true;
+    }
+    
+    if (!hasSabado && !hasDomingo) {
+      hasSabado = true;
+      hasDomingo = true;
+    }
+    
+    const cleanNameVal = cleanString(rawName);
+    let matchedCollab: Colaborador | null = null;
+    let status: 'sucesso' | 'nao_encontrado' | 'ambiguo' = 'nao_encontrado';
+    let candidates: Colaborador[] = [];
+    
+    candidates = activeCollabs.filter(collab => {
+      const dbClean = cleanString(collab.nome);
+      return dbClean === cleanNameVal || dbClean.includes(cleanNameVal) || cleanNameVal.includes(dbClean);
+    });
+    
+    if (candidates.length === 0) {
+      const parsedWords = cleanNameVal.split(/\s+/).filter(w => w.length > 2);
+      candidates = activeCollabs.filter(collab => {
+        const dbWords = cleanString(collab.nome).split(/\s+/).filter(w => w.length > 2);
+        return parsedWords.some(pw => dbWords.some(dw => dw === pw || dw.includes(pw) || pw.includes(dw)));
+      });
+    }
+    
+    if (candidates.length === 1) {
+      matchedCollab = candidates[0];
+      status = 'sucesso';
+    } else if (candidates.length > 1) {
+      const exactCandidate = candidates.find(c => cleanString(c.nome) === cleanNameVal);
+      if (exactCandidate) {
+        matchedCollab = exactCandidate;
+        status = 'sucesso';
+      } else {
+        matchedCollab = candidates[0];
+        status = 'ambiguo';
+      }
+    }
+    
+    results.push({
+      nomeOriginal: rawName,
+      colaborador: matchedCollab,
+      sabado: hasSabado,
+      domingo: hasDomingo,
+      status,
+      candidatos: candidates,
+    });
+  }
+  return results;
+};
+
+const allocateForDay = (dateStr: string, availableCollabs: Colaborador[]) => {
+  const assignedIds = new Set<string>();
+  const dayItens: any[] = [];
+  
+  const pool = [...availableCollabs].sort((a, b) => {
+    const pA = a.pontos !== undefined ? a.pontos : 10;
+    const pB = b.pontos !== undefined ? b.pontos : 10;
+    return pB - pA;
+  });
+  
+  const slots = [
+    { funcao: 'Resgatista 1', roleType: 'Resgatista' },
+    { funcao: 'Resgatista 2', roleType: 'Resgatista' },
+    { funcao: 'Monitor I (Tirolesa)', roleType: 'Monitor' },
+    { funcao: 'Monitor II (Base)', roleType: 'Monitor' },
+    { funcao: 'Monitor III (Bike/Caixa)', roleType: 'Monitor' },
+    { funcao: 'Caixa', roleType: 'Caixa' }
+  ];
+  
+  for (const slot of slots) {
+    const candidate = pool.find(c => c.funcao_padrao === slot.roleType && !assignedIds.has(c.id));
+    if (candidate) {
+      dayItens.push({
+        colaborador_id: candidate.id,
+        data: dateStr,
+        turno: '10:00 - 18:00',
+        funcao: slot.funcao,
+        treinamento: false
+      });
+      assignedIds.add(candidate.id);
+    }
+  }
+  
+  for (const slot of slots) {
+    const isFilled = dayItens.some(item => item.funcao === slot.funcao);
+    if (isFilled) continue;
+    const candidate = pool.find(c => !assignedIds.has(c.id));
+    if (candidate) {
+      dayItens.push({
+        colaborador_id: candidate.id,
+        data: dateStr,
+        turno: '10:00 - 18:00',
+        funcao: slot.funcao,
+        treinamento: false
+      });
+      assignedIds.add(candidate.id);
+    }
+  }
+  
+  return dayItens;
+};
 
 interface EditPageProps {
   params: Promise<{ id: string }>;
@@ -65,6 +238,51 @@ export default function EditEscalaPage({ params }: EditPageProps) {
 
   // Local helper for date list of the week
   const [diasDaSemana, setDiasDaSemana] = useState<{ nome: string; dataStr: string }[]>([]);
+
+  // Availability assistant state
+  const [assistenteAberto, setAssistenteAberto] = useState(false);
+  const [textoDisponibilidade, setTextoDisponibilidade] = useState('');
+  const [resultadosAnalise, setResultadosAnalise] = useState<AvailabilityParseResult[]>([]);
+  const [analiseExecutada, setAnaliseExecutada] = useState(false);
+
+  const handleAnalyseAvailability = () => {
+    if (!textoDisponibilidade.trim()) {
+      alert('Por favor, cole a disponibilidade antes de analisar.');
+      return;
+    }
+    const analysis = parseAvailability(textoDisponibilidade, colaboradores);
+    setResultadosAnalise(analysis);
+    setAnaliseExecutada(true);
+  };
+
+  const handleApplyAutoSchedule = () => {
+    if (resultadosAnalise.length === 0) return;
+    if (!selectedSabado) {
+      alert('Por favor, selecione a data do sábado da escala na Configuração Geral antes de aplicar.');
+      return;
+    }
+    
+    const satStr = selectedSabado;
+    const satDate = new Date(satStr + 'T00:00:00');
+    const sunDate = new Date(satDate);
+    sunDate.setDate(satDate.getDate() + 1);
+    const sunStr = sunDate.toISOString().split('T')[0];
+    
+    const satAvailable = resultadosAnalise
+      .filter(r => r.sabado && (r.status === 'sucesso' || r.status === 'ambiguo') && r.colaborador)
+      .map(r => r.colaborador!);
+      
+    const sunAvailable = resultadosAnalise
+      .filter(r => r.domingo && (r.status === 'sucesso' || r.status === 'ambiguo') && r.colaborador)
+      .map(r => r.colaborador!);
+
+    const satItens = allocateForDay(satStr, satAvailable);
+    const sunItens = allocateForDay(sunStr, sunAvailable);
+
+    setItens([...satItens, ...sunItens]);
+    setAssistenteAberto(false);
+    alert('Escala rascunhada com sucesso! Faça os ajustes finais abaixo.');
+  };
 
   useEffect(() => {
     checkAuth();
@@ -467,6 +685,143 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                 </label>
               </div>
             </div>
+          </div>
+
+          {/* Assistente de Disponibilidade do WhatsApp */}
+          <div className="bg-white dark:bg-stone-900 border border-amber-500/20 dark:border-amber-500/10 rounded-3xl p-6 shadow-sm shadow-amber-500/[0.02]">
+            <div className="flex items-center justify-between cursor-pointer" onClick={() => setAssistenteAberto(!assistenteAberto)}>
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-amber-500/10 text-amber-500 rounded-2xl">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-stone-850 dark:text-white flex items-center gap-2">
+                    Assistente de Disponibilidade do WhatsApp
+                    <span className="text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-700 dark:text-accent rounded-full font-bold uppercase tracking-wider">
+                      Novo
+                    </span>
+                  </h3>
+                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                    Cole o texto do grupo do WhatsApp para preencher a escala automaticamente
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="p-1.5 hover:bg-stone-100 dark:hover:bg-stone-850 rounded-xl text-stone-500 transition-all"
+              >
+                {assistenteAberto ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </button>
+            </div>
+
+            {assistenteAberto && (
+              <div className="mt-6 pt-6 border-t border-stone-100 dark:border-stone-800/60 space-y-5 animate-fadeIn">
+                <div className="space-y-2">
+                  <label htmlFor="avail-textarea" className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider">
+                    Copie e Cole as Disponibilidades
+                  </label>
+                  <textarea
+                    id="avail-textarea"
+                    rows={6}
+                    value={textoDisponibilidade}
+                    onChange={(e) => setTextoDisponibilidade(e.target.value)}
+                    placeholder={`Exemplo:\nJordão - sábado e domingo\nRyan - Sabado e Domingo\nAndre Rechia - Sábado e Domingo\nGabriel Winter - Domingo\nLeandro - Domingo\nHeloisa - sábado\nVictor - sábado e domingo`}
+                    className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-950 border border-stone-250 dark:border-stone-850 rounded-2xl text-xs focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all font-mono resize-y"
+                  />
+                </div>
+
+                <div className="flex justify-between items-center gap-3">
+                  <p className="text-[11px] text-stone-400 dark:text-stone-550 max-w-md font-medium leading-normal">
+                    💡 O algoritmo prioriza os colaboradores ativos com mais pontos (Score Interno) nas funções recomendadas (Resgatistas, Caixas e Monitores).
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleAnalyseAvailability}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shadow-amber-500/10 flex-shrink-0"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    Analisar Texto
+                  </button>
+                </div>
+
+                {analiseExecutada && (
+                  <div className="space-y-4 pt-4 border-t border-stone-100 dark:border-stone-800/40 animate-fadeIn">
+                    <h4 className="font-bold text-xs text-stone-700 dark:text-stone-300 uppercase tracking-wider">
+                      Resultado da Análise da Equipe
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {/* Identified Names */}
+                      <div className="bg-stone-50 dark:bg-stone-950/40 border border-stone-200/60 dark:border-stone-800/60 rounded-2xl p-4 space-y-3 max-h-[220px] overflow-y-auto">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-wider">Identificados ({resultadosAnalise.filter(r => r.status === 'sucesso').length})</span>
+                        </div>
+                        {resultadosAnalise.filter(r => r.status === 'sucesso').map((res, i) => (
+                          <div key={i} className="flex justify-between items-center text-[11px] font-semibold py-1 border-b border-stone-100 dark:border-stone-900/60 last:border-b-0">
+                            <span className="text-stone-800 dark:text-stone-200">{res.colaborador?.nome}</span>
+                            <div className="flex gap-1.5">
+                              {res.sabado && <span className="px-1.5 py-0.5 bg-accent/10 text-accent rounded text-[9px] font-bold">Sáb</span>}
+                              {res.domingo && <span className="px-1.5 py-0.5 bg-accent/10 text-accent rounded text-[9px] font-bold">Dom</span>}
+                              <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-450 rounded font-bold text-[9px]">⭐ {res.colaborador?.pontos} pts</span>
+                            </div>
+                          </div>
+                        ))}
+                        {resultadosAnalise.filter(r => r.status === 'sucesso').length === 0 && (
+                          <p className="text-xs text-stone-400 italic text-center py-4">Nenhum colaborador identificado.</p>
+                        )}
+                      </div>
+
+                      {/* Unmatched / Warnings */}
+                      <div className="bg-stone-50 dark:bg-stone-950/40 border border-stone-200/60 dark:border-stone-800/60 rounded-2xl p-4 space-y-3 max-h-[220px] overflow-y-auto">
+                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-550 uppercase tracking-wider">Alertas / Não Identificados ({resultadosAnalise.filter(r => r.status !== 'sucesso').length})</span>
+                        {resultadosAnalise.filter(r => r.status !== 'sucesso').map((res, i) => (
+                          <div key={i} className="flex flex-col gap-1 py-1.5 border-b border-stone-100 dark:border-stone-900/60 last:border-b-0 text-[11px]">
+                            <div className="flex justify-between items-center font-bold">
+                              <span className="text-red-500 dark:text-red-450 font-mono">"{res.nomeOriginal}"</span>
+                              <span className="px-1.5 py-0.2 bg-stone-200 text-stone-600 dark:bg-stone-850 dark:text-stone-400 rounded-full font-extrabold text-[8px]">
+                                {res.status === 'ambiguo' ? 'Ambiguidade' : 'Não cadastrado'}
+                              </span>
+                            </div>
+                            <p className="text-stone-400 dark:text-stone-500 text-[10px] font-medium leading-tight">
+                              {res.status === 'ambiguo' 
+                                ? `Conflito com múltiplos nomes: ${res.candidatos?.map(c => c.nome).join(', ')}`
+                                : 'Nome não corresponde a nenhum colaborador ativo.'}
+                            </p>
+                          </div>
+                        ))}
+                        {resultadosAnalise.filter(r => r.status !== 'sucesso').length === 0 && (
+                          <p className="text-xs text-stone-450 italic text-center py-4 text-emerald-600 dark:text-emerald-500 flex items-center justify-center gap-1">
+                            <CheckCircle className="w-3.5 h-3.5" /> Tudo limpo! Todos os nomes associados.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAnaliseExecutada(false);
+                          setTextoDisponibilidade('');
+                          setResultadosAnalise([]);
+                        }}
+                        className="px-4 py-2 bg-stone-150 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-stone-700 dark:text-stone-300 text-xs font-semibold rounded-xl transition-all"
+                      >
+                        Limpar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleApplyAutoSchedule}
+                        className="inline-flex items-center gap-1.5 px-5 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md transition-all"
+                      >
+                        <Check className="w-4 h-4" />
+                        Preencher Escala com Rascunho
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Shifts Builder Accordion/List */}

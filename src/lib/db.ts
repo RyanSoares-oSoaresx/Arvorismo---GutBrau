@@ -9,32 +9,32 @@ const LOCAL_STORAGE_KEYS = {
 };
 
 const defaultColaboradores: Colaborador[] = [
-  { id: 'c1', nome: 'André Rechia', telefone: '', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c2', nome: 'Claufer Scurra', telefone: '', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c3', nome: 'Guilherme Aguilhera', telefone: '', funcao_padrao: 'Resgatista', ativo: true },
-  { id: 'c4', nome: 'Leandro', telefone: '', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c5', nome: 'Adilson Corrêa Macêdo', telefone: '+55 47 9690-9398', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c6', nome: 'Adrian', telefone: '+55 79 8160-4431', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c7', nome: 'Ana Julia', telefone: '+55 47 9691-1349', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c8', nome: 'Andreia Gutknecht', telefone: '+55 47 9132-4981', funcao_padrao: 'Caixa', ativo: true },
-  { id: 'c9', nome: 'Arthur S.', telefone: '+55 47 8883-8392', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c10', nome: 'Barcelar', telefone: '+55 11 99282-9529', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c11', nome: 'Davi', telefone: '+55 47 9245-7850', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c12', nome: 'Djonatan Alves', telefone: '+55 47 9650-7594', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c13', nome: 'Gabriel', telefone: '+55 47 9140-3058', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c14', nome: 'Gabriel Rosa', telefone: '+55 47 9643-5644', funcao_padrao: 'Resgatista', ativo: true },
-  { id: 'c15', nome: 'Helo', telefone: '+55 47 8499-2868', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c16', nome: 'Henrique Saragoça', telefone: '+55 47 8802-4156', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c17', nome: 'Jordão Rafael', telefone: '+55 47 9151-1738', funcao_padrao: 'Resgatista', ativo: true },
-  { id: 'c18', nome: 'Karoline', telefone: '+55 47 8850-8894', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c19', nome: 'Mohrr', telefone: '+55 47 9908-2394', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c20', nome: 'Nicole Kaiser', telefone: '+55 47 9236-6921', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c21', nome: 'Você (Supervisor)', telefone: '+55 47 9994-6760', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c22', nome: 'Vitor', telefone: '+55 47 9914-0659', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c23', nome: 'Vitor Hugo Wielewski', telefone: '+55 47 9997-2848', funcao_padrao: 'Resgatista', ativo: true },
-  { id: 'c24', nome: 'Victor', telefone: '+55 47 8838-7696', funcao_padrao: 'Monitor', ativo: true },
-  { id: 'c25', nome: 'Ryan', telefone: '', funcao_padrao: 'Resgatista', ativo: true },
-  { id: 'c26', nome: 'Paulo', telefone: '', funcao_padrao: 'Monitor', ativo: true },
+  { id: 'c1', nome: 'André Rechia', telefone: '', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c2', nome: 'Claufer Scurra', telefone: '', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c3', nome: 'Guilherme Aguilhera', telefone: '', funcao_padrao: 'Resgatista', ativo: true, pontos: 10 },
+  { id: 'c4', nome: 'Leandro', telefone: '', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c5', nome: 'Adilson Corrêa Macêdo', telefone: '+55 47 9690-9398', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c6', nome: 'Adrian', telefone: '+55 79 8160-4431', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c7', nome: 'Ana Julia', telefone: '+55 47 9691-1349', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c8', nome: 'Andreia Gutknecht', telefone: '+55 47 9132-4981', funcao_padrao: 'Caixa', ativo: true, pontos: 10 },
+  { id: 'c9', nome: 'Arthur S.', telefone: '+55 47 8883-8392', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c10', nome: 'Barcelar', telefone: '+55 11 99282-9529', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c11', nome: 'Davi', telefone: '+55 47 9245-7850', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c12', nome: 'Djonatan Alves', telefone: '+55 47 9650-7594', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c13', nome: 'Gabriel', telefone: '+55 47 9140-3058', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c14', nome: 'Gabriel Rosa', telefone: '+55 47 9643-5644', funcao_padrao: 'Resgatista', ativo: true, pontos: 10 },
+  { id: 'c15', nome: 'Helo', telefone: '+55 47 8499-2868', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c16', nome: 'Henrique Saragoça', telefone: '+55 47 8802-4156', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c17', nome: 'Jordão Rafael', telefone: '+55 47 9151-1738', funcao_padrao: 'Resgatista', ativo: true, pontos: 10 },
+  { id: 'c18', nome: 'Karoline', telefone: '+55 47 8850-8894', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c19', nome: 'Mohrr', telefone: '+55 47 9908-2394', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c20', nome: 'Nicole Kaiser', telefone: '+55 47 9236-6921', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c21', nome: 'Você (Supervisor)', telefone: '+55 47 9994-6760', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c22', nome: 'Vitor', telefone: '+55 47 9914-0659', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c23', nome: 'Vitor Hugo Wielewski', telefone: '+55 47 9997-2848', funcao_padrao: 'Resgatista', ativo: true, pontos: 10 },
+  { id: 'c24', nome: 'Victor', telefone: '+55 47 8838-7696', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
+  { id: 'c25', nome: 'Ryan', telefone: '', funcao_padrao: 'Resgatista', ativo: true, pontos: 10 },
+  { id: 'c26', nome: 'Paulo', telefone: '', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
 ];
 
 // Helper to get week start date (Monday) and end date (Sunday) of a given date
@@ -175,10 +175,16 @@ export const db = {
         .select('*')
         .order('nome', { ascending: true });
       if (error) throw error;
-      return data || [];
+      return (data || []).map(c => ({
+        ...c,
+        pontos: c.pontos !== undefined && c.pontos !== null ? c.pontos : 10
+      }));
     } else {
-      return getLocalData<Colaborador[]>(LOCAL_STORAGE_KEYS.COLABORADORES, [])
-        .sort((a, b) => a.nome.localeCompare(b.nome));
+      const data = getLocalData<Colaborador[]>(LOCAL_STORAGE_KEYS.COLABORADORES, []);
+      return data.map(c => ({
+        ...c,
+        pontos: c.pontos !== undefined && c.pontos !== null ? c.pontos : 10
+      })).sort((a, b) => a.nome.localeCompare(b.nome));
     }
   },
 
