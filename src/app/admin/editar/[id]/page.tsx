@@ -19,7 +19,10 @@ import {
   ChevronDown,
   Wand2,
   Check,
-  CheckCircle
+  CheckCircle,
+  Unlock,
+  Lock,
+  MessageSquare
 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { Colaborador, Escala, EscalaItem } from '@/types/database';
@@ -232,6 +235,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
     turno: string;
     funcao: string;
     treinamento?: boolean;
+    comentario_interno?: string;
   }[]>([]);
   const [saveLoading, setSaveLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -244,6 +248,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
   const [textoDisponibilidade, setTextoDisponibilidade] = useState('');
   const [resultadosAnalise, setResultadosAnalise] = useState<AvailabilityParseResult[]>([]);
   const [analiseExecutada, setAnaliseExecutada] = useState(false);
+  const [finalizada, setFinalizada] = useState(false);
 
   const handleAnalyseAvailability = () => {
     if (!textoDisponibilidade.trim()) {
@@ -328,6 +333,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
           setPublicada(escala.publicada);
           setSabadoCancelado(escala.sabado_cancelado || false);
           setDomingoCancelado(escala.domingo_cancelado || false);
+          setFinalizada(escala.finalizada || false);
           setObservacoes(escala.observacoes || '');
           
           // Calculate selectedSabado from data_fim (Sunday) by subtracting 1 day
@@ -344,6 +350,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
             turno: item.turno,
             funcao: item.funcao,
             treinamento: item.treinamento || false,
+            comentario_interno: item.comentario_interno || '',
           }));
           setItens(mappedItens);
           calculateWeekDays(satStr, mappedItens);
@@ -424,7 +431,8 @@ export default function EditEscalaPage({ params }: EditPageProps) {
         data: dataStr,
         turno: PRESET_TURNOS[0],
         funcao: firstCollab.funcao_padrao || 'Monitor',
-        treinamento: false
+        treinamento: false,
+        comentario_interno: '',
       }
     ]);
   };
@@ -468,6 +476,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
         publicada,
         sabado_cancelado: sabadoCancelado,
         domingo_cancelado: domingoCancelado,
+        finalizada,
         observacoes: observacoes.trim() || undefined
       };
 
@@ -478,6 +487,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
         turno: item.turno,
         funcao: item.funcao,
         treinamento: item.treinamento || false,
+        comentario_interno: item.comentario_interno || '',
       }));
 
       await db.saveEscala(escalaPayload, itemsPayload);
@@ -532,9 +542,22 @@ export default function EditEscalaPage({ params }: EditPageProps) {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Locked Scale Warning Banner */}
+          {finalizada && (
+            <div className="bg-red-500/10 dark:bg-red-950/20 border border-red-500/20 dark:border-red-500/10 rounded-3xl p-5 flex items-center gap-4 text-red-700 dark:text-red-400 animate-fadeIn">
+              <AlertTriangle className="w-8 h-8 flex-shrink-0 text-red-500" />
+              <div>
+                <h4 className="font-bold text-sm">Escala Bloqueada para Alterações</h4>
+                <p className="text-xs text-red-650 dark:text-red-400/80 mt-0.5 leading-relaxed">
+                  Esta escala foi finalizada e marcada como completa no painel administrativo. Todas as alterações e remoções foram congeladas. Para editá-la, retorne ao painel e clique no botão de desbloqueio ("Reabrir").
+                 </p>
+              </div>
+            </div>
+          )}
+
           {/* Global Config Card */}
           <div className="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl p-6 shadow-sm">
-            <h3 className="font-bold text-base text-stone-800 dark:text-white mb-4">Configuração Geral</h3>
+            <h3 className="font-bold text-base text-stone-850 dark:text-white mb-4">Configuração Geral</h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
               <div>
@@ -544,10 +567,11 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                 <input
                   type="date"
                   required
+                  disabled={finalizada}
                   value={selectedSabado}
                   onChange={(e) => setSelectedSabado(e.target.value)}
                   onClick={(e) => e.currentTarget.showPicker?.()}
-                  className="w-full px-4 py-2.5 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all cursor-pointer font-semibold"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all cursor-pointer font-semibold disabled:opacity-60"
                 />
               </div>
 
@@ -566,7 +590,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
               </div>
             </div>
 
-            {selectedSabado && (
+            {selectedSabado && !finalizada && (
               <div className="mb-6 pb-6 border-b border-stone-200 dark:border-stone-800">
                 <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2">
                   Adicionar Feriado / Dia Especial (Caixa Vazia / Data)
@@ -600,12 +624,12 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                         let name = nameInput.value.trim();
 
                         if (!name) {
-                          const dateObj = new Date(dateStr + 'T00:00:00');
-                          let dayOfWeekName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
-                          dayOfWeekName = dayOfWeekName.charAt(0).toUpperCase() + dayOfWeekName.slice(1);
-                          name = `${dayOfWeekName} (Feriado)`;
+                           const dateObj = new Date(dateStr + 'T00:00:00');
+                           let dayOfWeekName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+                           dayOfWeekName = dayOfWeekName.charAt(0).toUpperCase() + dayOfWeekName.slice(1);
+                           name = `${dayOfWeekName} (Feriado)`;
                         }
-                        
+                         
                         const alreadyIn = diasDaSemana.some(d => d.dataStr === dateStr);
                         if (alreadyIn) {
                           alert('Este dia já foi adicionado.');
@@ -617,7 +641,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                           updated.sort((a, b) => a.dataStr.localeCompare(b.dataStr));
                           return updated;
                         });
-                        
+                         
                         nameInput.value = '';
                         dateInput.value = '';
                       } else {
@@ -635,14 +659,15 @@ export default function EditEscalaPage({ params }: EditPageProps) {
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider mb-2">
-                  Observações / Avisos
+                  Observações
                 </label>
                 <textarea
                   rows={2}
+                  disabled={finalizada}
                   value={observacoes}
                   onChange={(e) => setObservacoes(e.target.value)}
                   placeholder="Ex: Final de semana de sol, Gutbrau lotada! Foco no atendimento rápido. 🍻"
-                  className="w-full px-4 py-2.5 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all resize-none"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all resize-none disabled:opacity-60"
                 />
               </div>
 
@@ -650,9 +675,10 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                 <input
                   id="escala-pub"
                   type="checkbox"
+                  disabled={finalizada}
                   checked={publicada}
                   onChange={(e) => setPublicada(e.target.checked)}
-                  className="w-5 h-5 rounded border-stone-300 dark:border-stone-850 text-accent focus:ring-accent cursor-pointer"
+                  className="w-5 h-5 rounded border-stone-300 dark:border-stone-855 text-accent focus:ring-accent cursor-pointer disabled:opacity-50"
                 />
                 <label htmlFor="escala-pub" className="text-sm font-semibold text-stone-755 dark:text-stone-300 cursor-pointer select-none">
                   Publicar escala (visível para colaboradores)
@@ -663,9 +689,10 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                 <input
                   id="escala-cancel-sat"
                   type="checkbox"
+                  disabled={finalizada}
                   checked={sabadoCancelado}
                   onChange={(e) => setSabadoCancelado(e.target.checked)}
-                  className="w-5 h-5 rounded border-stone-300 dark:border-stone-850 text-red-500 focus:ring-red-500 cursor-pointer"
+                  className="w-5 h-5 rounded border-stone-300 dark:border-stone-850 text-red-500 focus:ring-red-500 cursor-pointer disabled:opacity-50"
                 />
                 <label htmlFor="escala-cancel-sat" className="text-sm font-semibold text-stone-755 dark:text-stone-300 cursor-pointer select-none">
                   Suspender recreação de **Sábado** (ex: chuva/clima)
@@ -676,9 +703,10 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                 <input
                   id="escala-cancel-sun"
                   type="checkbox"
+                  disabled={finalizada}
                   checked={domingoCancelado}
                   onChange={(e) => setDomingoCancelado(e.target.checked)}
-                  className="w-5 h-5 rounded border-stone-300 dark:border-stone-850 text-red-500 focus:ring-red-500 cursor-pointer"
+                  className="w-5 h-5 rounded border-stone-300 dark:border-stone-850 text-red-500 focus:ring-red-500 cursor-pointer disabled:opacity-50"
                 />
                 <label htmlFor="escala-cancel-sun" className="text-sm font-semibold text-stone-755 dark:text-stone-300 cursor-pointer select-none">
                   Suspender recreação de **Domingo** (ex: chuva/clima)
@@ -688,141 +716,128 @@ export default function EditEscalaPage({ params }: EditPageProps) {
           </div>
 
           {/* Assistente de Disponibilidade do WhatsApp */}
-          <div className="bg-white dark:bg-stone-900 border border-amber-500/20 dark:border-amber-500/10 rounded-3xl p-6 shadow-sm shadow-amber-500/[0.02]">
-            <div className="flex items-center justify-between cursor-pointer" onClick={() => setAssistenteAberto(!assistenteAberto)}>
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-amber-500/10 text-amber-500 rounded-2xl">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-base text-stone-850 dark:text-white flex items-center gap-2">
-                    Assistente de Disponibilidade do WhatsApp
-                    <span className="text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-700 dark:text-accent rounded-full font-bold uppercase tracking-wider">
-                      Novo
-                    </span>
-                  </h3>
-                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-                    Cole o texto do grupo do WhatsApp para preencher a escala automaticamente
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="p-1.5 hover:bg-stone-100 dark:hover:bg-stone-850 rounded-xl text-stone-500 transition-all"
-              >
-                {assistenteAberto ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-              </button>
-            </div>
-
-            {assistenteAberto && (
-              <div className="mt-6 pt-6 border-t border-stone-100 dark:border-stone-800/60 space-y-5 animate-fadeIn">
-                <div className="space-y-2">
-                  <label htmlFor="avail-textarea" className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider">
-                    Copie e Cole as Disponibilidades
-                  </label>
-                  <textarea
-                    id="avail-textarea"
-                    rows={6}
-                    value={textoDisponibilidade}
-                    onChange={(e) => setTextoDisponibilidade(e.target.value)}
-                    placeholder={`Exemplo:\nJordão - sábado e domingo\nRyan - Sabado e Domingo\nAndre Rechia - Sábado e Domingo\nGabriel Winter - Domingo\nLeandro - Domingo\nHeloisa - sábado\nVictor - sábado e domingo`}
-                    className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-950 border border-stone-250 dark:border-stone-850 rounded-2xl text-xs focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all font-mono resize-y"
-                  />
-                </div>
-
-                <div className="flex justify-between items-center gap-3">
-                  <p className="text-[11px] text-stone-400 dark:text-stone-550 max-w-md font-medium leading-normal">
-                    💡 O algoritmo prioriza os colaboradores ativos com mais pontos (Score Interno) nas funções recomendadas (Resgatistas, Caixas e Monitores).
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleAnalyseAvailability}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shadow-amber-500/10 flex-shrink-0"
-                  >
-                    <Wand2 className="w-3.5 h-3.5" />
-                    Analisar Texto
-                  </button>
-                </div>
-
-                {analiseExecutada && (
-                  <div className="space-y-4 pt-4 border-t border-stone-100 dark:border-stone-800/40 animate-fadeIn">
-                    <h4 className="font-bold text-xs text-stone-700 dark:text-stone-300 uppercase tracking-wider">
-                      Resultado da Análise da Equipe
-                    </h4>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      {/* Identified Names */}
-                      <div className="bg-stone-50 dark:bg-stone-950/40 border border-stone-200/60 dark:border-stone-800/60 rounded-2xl p-4 space-y-3 max-h-[220px] overflow-y-auto">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-wider">Identificados ({resultadosAnalise.filter(r => r.status === 'sucesso').length})</span>
-                        </div>
-                        {resultadosAnalise.filter(r => r.status === 'sucesso').map((res, i) => (
-                          <div key={i} className="flex justify-between items-center text-[11px] font-semibold py-1 border-b border-stone-100 dark:border-stone-900/60 last:border-b-0">
-                            <span className="text-stone-800 dark:text-stone-200">{res.colaborador?.nome}</span>
-                            <div className="flex gap-1.5">
-                              {res.sabado && <span className="px-1.5 py-0.5 bg-accent/10 text-accent rounded text-[9px] font-bold">Sáb</span>}
-                              {res.domingo && <span className="px-1.5 py-0.5 bg-accent/10 text-accent rounded text-[9px] font-bold">Dom</span>}
-                              <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-450 rounded font-bold text-[9px]">⭐ {res.colaborador?.pontos} pts</span>
-                            </div>
-                          </div>
-                        ))}
-                        {resultadosAnalise.filter(r => r.status === 'sucesso').length === 0 && (
-                          <p className="text-xs text-stone-400 italic text-center py-4">Nenhum colaborador identificado.</p>
-                        )}
-                      </div>
-
-                      {/* Unmatched / Warnings */}
-                      <div className="bg-stone-50 dark:bg-stone-950/40 border border-stone-200/60 dark:border-stone-800/60 rounded-2xl p-4 space-y-3 max-h-[220px] overflow-y-auto">
-                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-550 uppercase tracking-wider">Alertas / Não Identificados ({resultadosAnalise.filter(r => r.status !== 'sucesso').length})</span>
-                        {resultadosAnalise.filter(r => r.status !== 'sucesso').map((res, i) => (
-                          <div key={i} className="flex flex-col gap-1 py-1.5 border-b border-stone-100 dark:border-stone-900/60 last:border-b-0 text-[11px]">
-                            <div className="flex justify-between items-center font-bold">
-                              <span className="text-red-500 dark:text-red-450 font-mono">"{res.nomeOriginal}"</span>
-                              <span className="px-1.5 py-0.2 bg-stone-200 text-stone-600 dark:bg-stone-850 dark:text-stone-400 rounded-full font-extrabold text-[8px]">
-                                {res.status === 'ambiguo' ? 'Ambiguidade' : 'Não cadastrado'}
-                              </span>
-                            </div>
-                            <p className="text-stone-400 dark:text-stone-500 text-[10px] font-medium leading-tight">
-                              {res.status === 'ambiguo' 
-                                ? `Conflito com múltiplos nomes: ${res.candidatos?.map(c => c.nome).join(', ')}`
-                                : 'Nome não corresponde a nenhum colaborador ativo.'}
-                            </p>
-                          </div>
-                        ))}
-                        {resultadosAnalise.filter(r => r.status !== 'sucesso').length === 0 && (
-                          <p className="text-xs text-stone-450 italic text-center py-4 text-emerald-600 dark:text-emerald-500 flex items-center justify-center gap-1">
-                            <CheckCircle className="w-3.5 h-3.5" /> Tudo limpo! Todos os nomes associados.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAnaliseExecutada(false);
-                          setTextoDisponibilidade('');
-                          setResultadosAnalise([]);
-                        }}
-                        className="px-4 py-2 bg-stone-150 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-stone-700 dark:text-stone-300 text-xs font-semibold rounded-xl transition-all"
-                      >
-                        Limpar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleApplyAutoSchedule}
-                        className="inline-flex items-center gap-1.5 px-5 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md transition-all"
-                      >
-                        <Check className="w-4 h-4" />
-                        Preencher Escala com Rascunho
-                      </button>
-                    </div>
+          {!finalizada && (
+            <div className="bg-white dark:bg-stone-900 border border-amber-500/20 dark:border-amber-500/10 rounded-3xl p-6 shadow-sm shadow-amber-500/[0.02]">
+              <div className="flex items-center justify-between cursor-pointer" onClick={() => setAssistenteAberto(!assistenteAberto)}>
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-amber-500/10 text-amber-500 rounded-2xl">
+                    <Sparkles className="w-5 h-5" />
                   </div>
-                )}
+                  <div>
+                    <h3 className="font-bold text-base text-stone-850 dark:text-white flex items-center gap-2">
+                      Assistente de Disponibilidade do WhatsApp
+                      <span className="text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-700 dark:text-accent rounded-full font-bold uppercase tracking-wider">
+                        Novo
+                      </span>
+                    </h3>
+                    <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                      Cole o texto do grupo do WhatsApp para preencher a escala automaticamente
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="p-1.5 hover:bg-stone-100 dark:hover:bg-stone-850 rounded-xl text-stone-500 transition-all"
+                >
+                  {assistenteAberto ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
               </div>
-            )}
-          </div>
+
+              {assistenteAberto && (
+                <div className="mt-6 pt-6 border-t border-stone-100 dark:border-stone-800/60 space-y-5 animate-fadeIn">
+                  <div className="space-y-2">
+                    <label htmlFor="avail-textarea" className="block text-xs font-bold text-stone-600 dark:text-stone-400 uppercase tracking-wider">
+                      Copie e Cole as Disponibilidades
+                    </label>
+                    <textarea
+                      id="avail-textarea"
+                      rows={6}
+                      value={textoDisponibilidade}
+                      onChange={(e) => setTextoDisponibilidade(e.target.value)}
+                      placeholder={`Exemplo:\nJordão - sábado e domingo\nRyan - Sabado e Domingo\nAndre Rechia - Sábado e Domingo\nGabriel Winter - Domingo\nLeandro - Domingo\nHeloisa - sábado\nVictor - sábado e domingo`}
+                      className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-950 border border-stone-250 dark:border-stone-850 rounded-2xl text-xs focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all font-mono resize-y"
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center gap-3">
+                    <p className="text-[11px] text-stone-400 dark:text-stone-550 max-w-md font-medium leading-normal">
+                      💡 O algoritmo prioriza os colaboradores ativos com mais pontos (Score Interno) nas funções recomendadas (Resgatistas, Caixas e Monitores).
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleAnalyseAvailability}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shadow-amber-500/10 flex-shrink-0"
+                    >
+                      <Wand2 className="w-3.5 h-3.5" />
+                      Analisar Texto
+                    </button>
+                  </div>
+
+                  {analiseExecutada && (
+                    <div className="space-y-4 pt-4 border-t border-stone-100 dark:border-stone-800/40 animate-fadeIn">
+                      <h4 className="font-bold text-xs text-stone-700 dark:text-stone-300 uppercase tracking-wider">
+                        Resultado da Análise da Equipe
+                      </h4>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div className="bg-stone-50 dark:bg-stone-950/40 border border-stone-200/60 dark:border-stone-800/60 rounded-2xl p-4 space-y-3 max-h-[220px] overflow-y-auto">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-wider">Identificados ({resultadosAnalise.filter(r => r.status === 'sucesso').length})</span>
+                          </div>
+                          {resultadosAnalise.filter(r => r.status === 'sucesso').map((res, i) => (
+                            <div key={i} className="flex justify-between items-center text-[11px] font-semibold py-1 border-b border-stone-100 dark:border-stone-900/60 last:border-b-0">
+                              <span className="text-stone-800 dark:text-stone-200">{res.colaborador?.nome}</span>
+                              <div className="flex gap-1.5">
+                                {res.sabado && <span className="px-1.5 py-0.5 bg-accent/10 text-accent rounded text-[9px] font-bold">Sáb</span>}
+                                {res.domingo && <span className="px-1.5 py-0.5 bg-accent/10 text-accent rounded text-[9px] font-bold">Dom</span>}
+                                <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-450 rounded font-bold text-[9px]">⭐ {res.colaborador?.pontos} pts</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="bg-stone-50 dark:bg-stone-950/40 border border-stone-200/60 dark:border-stone-800/60 rounded-2xl p-4 space-y-3 max-h-[220px] overflow-y-auto">
+                          <span className="text-[10px] font-bold text-amber-600 dark:text-amber-550 uppercase tracking-wider">Alertas / Não Identificados ({resultadosAnalise.filter(r => r.status !== 'sucesso').length})</span>
+                          {resultadosAnalise.filter(r => r.status !== 'sucesso').map((res, i) => (
+                            <div key={i} className="flex flex-col gap-1 py-1.5 border-b border-stone-100 dark:border-stone-900/60 last:border-b-0 text-[11px]">
+                              <div className="flex justify-between items-center font-bold">
+                                <span className="text-red-500 dark:text-red-450 font-mono">"{res.nomeOriginal}"</span>
+                                <span className="px-1.5 py-0.2 bg-stone-200 text-stone-600 dark:bg-stone-850 dark:text-stone-400 rounded-full font-extrabold text-[8px]">
+                                  {res.status === 'ambiguo' ? 'Ambiguidade' : 'Não cadastrado'}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-3 pt-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAnaliseExecutada(false);
+                            setTextoDisponibilidade('');
+                            setResultadosAnalise([]);
+                          }}
+                          className="px-4 py-2 bg-stone-150 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-stone-700 dark:text-stone-300 text-xs font-semibold rounded-xl transition-all"
+                        >
+                          Limpar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleApplyAutoSchedule}
+                          className="inline-flex items-center gap-1.5 px-5 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md transition-all"
+                        >
+                          <Check className="w-4 h-4" />
+                          Preencher Escala com Rascunho
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Shifts Builder Accordion/List */}
           <div className="space-y-6">
@@ -838,10 +853,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
             ) : (
               <div className="space-y-5">
                 {diasDaSemana.map(dia => {
-                  // Filter items for this specific date
                   const dayItens = itens.map((item, idx) => ({ ...item, globalIndex: idx })).filter(item => item.data === dia.dataStr);
-                  
-                  // Check if it is a weekend day (focus days)
                   const isWeekendDay = dia.nome.toLowerCase().includes('sábado') || dia.nome.toLowerCase().includes('domingo');
 
                   return (
@@ -853,7 +865,6 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                           : 'border-stone-200 dark:border-stone-850'
                       }`}
                     >
-                      {/* Day Header */}
                       <div className={`px-5 py-3.5 border-b flex justify-between items-center ${
                         isWeekendDay 
                           ? 'bg-accent/[0.02] border-accent/20 dark:border-accent/10'
@@ -866,16 +877,17 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleAddShift(dia.dataStr)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent hover:bg-accent-hover text-white text-xs font-semibold rounded-lg shadow-sm transition-all"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                            Adicionar Turno
-                          </button>
-                          
-                          {!isWeekendDay && (
+                          {!finalizada && (
+                            <button
+                              type="button"
+                              onClick={() => handleAddShift(dia.dataStr)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent hover:bg-accent-hover text-white text-xs font-semibold rounded-lg shadow-sm transition-all"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              Adicionar Turno
+                            </button>
+                          )}
+                          {!isWeekendDay && !finalizada && (
                             <button
                               type="button"
                               onClick={() => {
@@ -893,7 +905,6 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                         </div>
                       </div>
 
-                      {/* Day Shifts */}
                       <div className="p-4 space-y-3">
                         {dayItens.length === 0 ? (
                           <p className="text-center py-4 text-xs text-stone-400 dark:text-stone-500 italic">
@@ -906,13 +917,13 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                                 key={item.globalIndex}
                                 className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center p-3 bg-stone-50 dark:bg-stone-900/40 border border-stone-200 dark:border-stone-800 rounded-xl animate-fadeIn"
                               >
-                                {/* Colaborador Dropdown */}
-                                <div className="sm:col-span-4 flex items-center gap-2">
+                                <div className="sm:col-span-3 flex items-center gap-2">
                                   <User className="w-4 h-4 text-stone-400 flex-shrink-0" />
                                   <select
+                                    disabled={finalizada}
                                     value={item.colaborador_id}
                                     onChange={(e) => handleUpdateShift(item.globalIndex, 'colaborador_id', e.target.value)}
-                                    className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium"
+                                    className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60"
                                   >
                                     {colaboradores.map(c => (
                                       <option key={c.id} value={c.id}>{c.nome}</option>
@@ -920,16 +931,16 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                                   </select>
                                 </div>
 
-                                {/* Shift Time */}
-                                <div className="sm:col-span-3 flex items-center gap-2">
+                                <div className="sm:col-span-2 flex items-center gap-2">
                                   <Clock className="w-4 h-4 text-stone-400 flex-shrink-0" />
                                   <input
                                     type="text"
                                     required
+                                    disabled={finalizada}
                                     value={item.turno}
                                     onChange={(e) => handleUpdateShift(item.globalIndex, 'turno', e.target.value)}
                                     placeholder="Ex: 10:00 - 18:00"
-                                    className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium"
+                                    className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60"
                                     list={`turnos-datalist-${dia.dataStr}`}
                                   />
                                   <datalist id={`turnos-datalist-${dia.dataStr}`}>
@@ -937,13 +948,13 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                                   </datalist>
                                 </div>
 
-                                {/* Role Selection Dropdown */}
-                                <div className="sm:col-span-3 flex items-center gap-2">
+                                <div className="sm:col-span-2 flex items-center gap-2">
                                   <Briefcase className="w-4 h-4 text-stone-400 flex-shrink-0" />
                                   <select
+                                    disabled={finalizada}
                                     value={item.funcao}
                                     onChange={(e) => handleUpdateShift(item.globalIndex, 'funcao', e.target.value)}
-                                    className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium"
+                                    className="w-full bg-white dark:bg-stone-955 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60"
                                   >
                                     <option value="Monitor">Monitor (Automático)</option>
                                     <option value="Resgatista">Resgatista (Automático)</option>
@@ -953,34 +964,43 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                                     <option value="Monitor I (Tirolesa)">Monitor I (Tirolesa)</option>
                                     <option value="Monitor II (Base)">Monitor II (Base)</option>
                                     <option value="Monitor III (Bike/Caixa)">Monitor III (Bike/Caixa)</option>
-                                    {item.funcao && !['Monitor', 'Resgatista', 'Caixa', 'Resgatista 1', 'Resgatista 2', 'Monitor I (Tirolesa)', 'Monitor II (Base)', 'Monitor III (Bike/Caixa)'].includes(item.funcao) && (
-                                      <option value={item.funcao}>{item.funcao}</option>
-                                    )}
                                   </select>
                                 </div>
 
-                                {/* Actions */}
+                                <div className="sm:col-span-3 flex items-center gap-2">
+                                  <MessageSquare className="w-4 h-4 text-stone-400 flex-shrink-0" />
+                                  <input
+                                    type="text"
+                                    disabled={finalizada}
+                                    value={item.comentario_interno || ''}
+                                    onChange={(e) => handleUpdateShift(item.globalIndex, 'comentario_interno', e.target.value)}
+                                    placeholder="Comentário interno (obs)"
+                                    className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60"
+                                  />
+                                </div>
+
                                 <div className="sm:col-span-2 flex items-center justify-end gap-2">
                                   <button
                                     type="button"
+                                    disabled={finalizada}
                                     onClick={() => handleUpdateShift(item.globalIndex, 'treinamento', !item.treinamento)}
-                                    className={`px-2 py-1.5 rounded-lg border transition-all text-[9px] font-extrabold uppercase tracking-wider flex items-center justify-center flex-1 sm:flex-initial select-none ${
+                                    className={`px-2 py-1.5 rounded-lg border transition-all text-[9px] font-extrabold uppercase tracking-wider flex items-center justify-center flex-1 sm:flex-initial select-none disabled:opacity-50 ${
                                       item.treinamento 
                                         ? 'bg-amber-500/20 text-amber-700 border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20' 
                                         : 'bg-stone-100 text-stone-500 border-stone-200 dark:bg-stone-900 dark:text-stone-400 dark:border-stone-800 hover:bg-stone-200'
                                     }`}
-                                    title={item.treinamento ? 'Remover marcação de treinamento' : 'Marcar como em treinamento (Gabriel***)'}
                                   >
                                     Treino
                                   </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveShift(item.globalIndex)}
-                                    className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-650 dark:text-red-400 rounded-lg transition-all flex-shrink-0"
-                                    title="Remover turno"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
+                                  {!finalizada && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveShift(item.globalIndex)}
+                                      className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-650 dark:text-red-400 rounded-lg transition-all flex-shrink-0"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             ))}
@@ -1008,16 +1028,18 @@ export default function EditEscalaPage({ params }: EditPageProps) {
               href="/admin"
               className="px-5 py-2.5 bg-stone-200 hover:bg-stone-300 dark:bg-stone-900 dark:hover:bg-stone-850 text-stone-800 dark:text-stone-200 text-sm font-semibold rounded-xl transition-all"
             >
-              Cancelar
+              {finalizada ? 'Voltar' : 'Cancelar'}
             </Link>
-            <button
-              type="submit"
-              disabled={saveLoading}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-accent hover:bg-accent-hover text-white text-sm font-semibold rounded-xl shadow-md transition-all duration-205 disabled:opacity-50"
-            >
-              <Save className="w-4 h-4" />
-              {saveLoading ? 'Salvando Escala...' : 'Salvar Escala Semanal'}
-            </button>
+            {!finalizada && (
+              <button
+                type="submit"
+                disabled={saveLoading}
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-accent hover:bg-accent-hover text-white text-sm font-semibold rounded-xl shadow-md transition-all duration-205 disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                {saveLoading ? 'Salvando Escala...' : 'Salvar Escala Semanal'}
+              </button>
+            )}
           </div>
         </form>
       )}

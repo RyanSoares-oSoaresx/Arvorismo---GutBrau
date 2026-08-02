@@ -254,10 +254,16 @@ export const db = {
         .select('*')
         .order('data_inicio', { ascending: false });
       if (error) throw error;
-      return data || [];
+      return (data || []).map(e => ({
+        ...e,
+        finalizada: !!e.finalizada
+      }));
     } else {
-      return getLocalData<Escala[]>(LOCAL_STORAGE_KEYS.ESCALAS, [])
-        .sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
+      const data = getLocalData<Escala[]>(LOCAL_STORAGE_KEYS.ESCALAS, []);
+      return data.map(e => ({
+        ...e,
+        finalizada: !!e.finalizada
+      })).sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
     }
   },
 
@@ -283,6 +289,7 @@ export const db = {
 
       return {
         ...escala,
+        finalizada: !!escala.finalizada,
         itens: itens || [],
       };
     } else {
@@ -302,6 +309,7 @@ export const db = {
 
       return {
         ...escala,
+        finalizada: !!escala.finalizada,
         itens: scaleItens,
       };
     }
@@ -388,6 +396,7 @@ export const db = {
         turno: item.turno,
         funcao: item.funcao,
         treinamento: (item as any).treinamento || false,
+        comentario_interno: (item as any).comentario_interno || '',
       }));
 
       if (itemsToInsert.length > 0) {

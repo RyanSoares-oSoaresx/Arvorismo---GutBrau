@@ -17,6 +17,7 @@ export interface Escala {
   domingo_cancelado: boolean;
   observacoes?: string;
   created_at?: string;
+  finalizada?: boolean;
 }
 
 export interface EscalaItem {
@@ -27,6 +28,7 @@ export interface EscalaItem {
   turno: string;       // e.g. '10:00 - 18:00'
   funcao: string;      // e.g. 'Caixa'
   treinamento?: boolean;
+  comentario_interno?: string;
   created_at?: string;
   // Joined relation fields for convenience
   colaborador?: Colaborador;

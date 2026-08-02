@@ -12,8 +12,10 @@ CREATE TABLE IF NOT EXISTS colaboradores (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- MIGRATION: Execute o comando abaixo no Editor SQL do Supabase se a tabela já existir:
+-- MIGRATIONS (Se as tabelas já existirem no seu Supabase, execute estes comandos no SQL Editor):
 -- ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS pontos INTEGER DEFAULT 10;
+-- ALTER TABLE escalas ADD COLUMN IF NOT EXISTS finalizada BOOLEAN NOT NULL DEFAULT false;
+-- ALTER TABLE escala_itens ADD COLUMN IF NOT EXISTS comentario_interno TEXT;
 
 -- Habilitar Row Level Security (RLS) se desejado.
 -- Para facilidade inicial, as regras de RLS podem ser simplificadas ou desativadas.
@@ -27,6 +29,7 @@ CREATE TABLE IF NOT EXISTS escalas (
     publicada BOOLEAN NOT NULL DEFAULT false,
     sabado_cancelado BOOLEAN NOT NULL DEFAULT false,
     domingo_cancelado BOOLEAN NOT NULL DEFAULT false,
+    finalizada BOOLEAN NOT NULL DEFAULT false,
     observacoes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -42,6 +45,7 @@ CREATE TABLE IF NOT EXISTS escala_itens (
     turno TEXT NOT NULL, -- Horário de trabalho (ex: '10:00 - 18:00')
     funcao TEXT NOT NULL, -- Função exercida naquele dia (ex: 'Caixa')
     treinamento BOOLEAN NOT NULL DEFAULT false,
+    comentario_interno TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 

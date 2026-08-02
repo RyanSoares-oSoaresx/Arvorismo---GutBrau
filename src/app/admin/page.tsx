@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   Lock, 
+  Unlock,
   Beer, 
   Calendar, 
   Plus, 
@@ -269,6 +270,8 @@ export default function AdminDashboardPage() {
           data: item.data,
           turno: item.turno,
           funcao: item.funcao,
+          treinamento: item.treinamento,
+          comentario_interno: item.comentario_interno,
         }))
       );
 
@@ -296,12 +299,38 @@ export default function AdminDashboardPage() {
           data: item.data,
           turno: item.turno,
           funcao: item.funcao,
+          treinamento: item.treinamento,
+          comentario_interno: item.comentario_interno,
         }))
       );
 
       setEscalas(prev => prev.map(e => e.id === escala.id ? updated : e));
     } catch (err) {
       console.error('Erro ao alternar cancelamento do dia:', err);
+      alert('Erro ao salvar alteração.');
+    }
+  };
+
+  const handleToggleFinalize = async (escala: Escala) => {
+    try {
+      const full = await db.getEscalaById(escala.id);
+      if (!full) return;
+
+      const updated = await db.saveEscala(
+        { ...escala, finalizada: !escala.finalizada },
+        full.itens.map(item => ({
+          colaborador_id: item.colaborador_id,
+          data: item.data,
+          turno: item.turno,
+          funcao: item.funcao,
+          treinamento: item.treinamento,
+          comentario_interno: item.comentario_interno,
+        }))
+      );
+
+      setEscalas(prev => prev.map(e => e.id === escala.id ? updated : e));
+    } catch (err) {
+      console.error('Erro ao alternar finalização:', err);
       alert('Erro ao salvar alteração.');
     }
   };
@@ -502,21 +531,25 @@ export default function AdminDashboardPage() {
                           Semana: {formatDate(escala.data_inicio, true)} a {formatDate(escala.data_fim, true)}
                         </span>
                         <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                          escala.sabado_cancelado && escala.domingo_cancelado
-                            ? 'bg-red-500/10 text-red-750 border border-red-500/20'
-                            : escala.sabado_cancelado || escala.domingo_cancelado
-                              ? 'bg-amber-500/10 text-amber-700 dark:text-accent border border-amber-500/20'
-                              : escala.publicada 
-                                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
-                                : 'bg-stone-100 text-stone-500 border border-stone-200 dark:bg-stone-950 dark:text-stone-400 dark:border-stone-800'
+                          escala.finalizada
+                            ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20'
+                            : escala.sabado_cancelado && escala.domingo_cancelado
+                              ? 'bg-red-500/10 text-red-750 border border-red-500/20'
+                              : escala.sabado_cancelado || escala.domingo_cancelado
+                                ? 'bg-amber-500/10 text-amber-700 dark:text-accent border border-amber-500/20'
+                                : escala.publicada 
+                                  ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' 
+                                  : 'bg-stone-100 text-stone-500 border border-stone-200 dark:bg-stone-950 dark:text-stone-400 dark:border-stone-800'
                         }`}>
-                          {escala.sabado_cancelado && escala.domingo_cancelado
-                            ? 'Cancelada' 
-                            : escala.sabado_cancelado || escala.domingo_cancelado
-                              ? 'Cancel. Parcial'
-                              : escala.publicada 
-                                ? 'Publicada' 
-                                : 'Rascunho'}
+                          {escala.finalizada
+                            ? 'Completa'
+                            : escala.sabado_cancelado && escala.domingo_cancelado
+                              ? 'Cancelada' 
+                              : escala.sabado_cancelado || escala.domingo_cancelado
+                                ? 'Cancel. Parcial'
+                                : escala.publicada 
+                                  ? 'Publicada' 
+                                  : 'Rascunho'}
                         </span>
                       </div>
                       {escala.observacoes && (
@@ -551,13 +584,16 @@ export default function AdminDashboardPage() {
 
                       {/* Cancel Saturday */}
                       <button
-                        onClick={() => handleToggleCancelDay(escala, 'sabado')}
+                        onClick={() => !escala.finalizada && handleToggleCancelDay(escala, 'sabado')}
+                        disabled={escala.finalizada}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border ${
-                          escala.sabado_cancelado
-                            ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 border-emerald-500/20 dark:text-emerald-400'
-                            : 'bg-red-500/10 hover:bg-red-500/20 text-red-650 border-red-500/20 dark:text-red-400'
+                          escala.finalizada
+                            ? 'bg-stone-100/50 text-stone-400 border-stone-200/50 cursor-not-allowed opacity-50 dark:bg-stone-900/30 dark:border-stone-850/30'
+                            : escala.sabado_cancelado
+                              ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 border-emerald-500/20 dark:text-emerald-400'
+                              : 'bg-red-500/10 hover:bg-red-500/20 text-red-650 border-red-500/20 dark:text-red-400'
                         }`}
-                        title={escala.sabado_cancelado ? 'Ativar Sábado' : 'Suspender Sábado'}
+                        title={escala.finalizada ? 'Escala bloqueada' : escala.sabado_cancelado ? 'Ativar Sábado' : 'Suspender Sábado'}
                       >
                         <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
                         <span>Sáb {escala.sabado_cancelado ? 'Cancel' : 'Ativo'}</span>
@@ -565,24 +601,59 @@ export default function AdminDashboardPage() {
 
                       {/* Cancel Sunday */}
                       <button
-                        onClick={() => handleToggleCancelDay(escala, 'domingo')}
+                        onClick={() => !escala.finalizada && handleToggleCancelDay(escala, 'domingo')}
+                        disabled={escala.finalizada}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border ${
-                          escala.domingo_cancelado
-                            ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 border-emerald-500/20 dark:text-emerald-400'
-                            : 'bg-red-500/10 hover:bg-red-500/20 text-red-650 border-red-500/20 dark:text-red-400'
+                          escala.finalizada
+                            ? 'bg-stone-100/50 text-stone-400 border-stone-200/50 cursor-not-allowed opacity-50 dark:bg-stone-900/30 dark:border-stone-850/30'
+                            : escala.domingo_cancelado
+                              ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 border-emerald-500/20 dark:text-emerald-400'
+                              : 'bg-red-500/10 hover:bg-red-500/20 text-red-650 border-red-500/20 dark:text-red-400'
                         }`}
-                        title={escala.domingo_cancelado ? 'Ativar Domingo' : 'Suspender Domingo'}
+                        title={escala.finalizada ? 'Escala bloqueada' : escala.domingo_cancelado ? 'Ativar Domingo' : 'Suspender Domingo'}
                       >
                         <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
                         <span>Dom {escala.domingo_cancelado ? 'Cancel' : 'Ativo'}</span>
+                      </button>
+
+                      {/* Finalize Lock Toggle */}
+                      <button
+                        onClick={() => handleToggleFinalize(escala)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border ${
+                          escala.finalizada
+                            ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 border-blue-500/20 dark:text-blue-400'
+                            : 'bg-stone-100 hover:bg-stone-200 text-stone-700 border-stone-200 dark:bg-stone-950 dark:hover:bg-stone-850 dark:text-stone-300 dark:border-stone-800'
+                        }`}
+                        title={escala.finalizada ? 'Reabrir escala para edições' : 'Finalizar escala (Bloquear alterações)'}
+                      >
+                        {escala.finalizada ? (
+                          <>
+                            <Unlock className="w-3.5 h-3.5 text-blue-500" />
+                            Reabrir
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-3.5 h-3.5" />
+                            Finalizar
+                          </>
+                        )}
                       </button>
 
                       <Link
                         href={`/admin/editar/${escala.id}`}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-900 hover:bg-stone-800 dark:bg-stone-950 dark:hover:bg-stone-850 dark:border dark:border-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
                       >
-                        <Edit3 className="w-3.5 h-3.5 text-accent" />
-                        Editar
+                        {escala.finalizada ? (
+                          <>
+                            <Eye className="w-3.5 h-3.5 text-blue-400" />
+                            Visualizar
+                          </>
+                        ) : (
+                          <>
+                            <Edit3 className="w-3.5 h-3.5 text-accent" />
+                            Editar
+                          </>
+                        )}
                       </Link>
 
                       <button
