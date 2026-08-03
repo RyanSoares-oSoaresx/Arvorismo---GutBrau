@@ -743,9 +743,6 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                   <div>
                     <h3 className="font-bold text-base text-stone-850 dark:text-white flex items-center gap-2">
                       Assistente de Disponibilidade do WhatsApp
-                      <span className="text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-700 dark:text-accent rounded-full font-bold uppercase tracking-wider">
-                        Novo
-                      </span>
                     </h3>
                     <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
                       Cole o texto do grupo do WhatsApp para preencher a escala automaticamente
