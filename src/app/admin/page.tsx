@@ -438,8 +438,9 @@ export default function AdminDashboardPage() {
         };
       });
 
-      reportItems.sort((a, b) => a.colaborador.nome.localeCompare(b.colaborador.nome));
-      setAdminReportData(reportItems);
+      const activeReport = reportItems.filter(item => item.totalTurnos > 0);
+      activeReport.sort((a, b) => a.colaborador.nome.localeCompare(b.colaborador.nome));
+      setAdminReportData(activeReport);
     } catch (err) {
       console.error('Erro ao gerar relatório administrativo:', err);
       alert('Erro ao carregar dados do relatório.');
