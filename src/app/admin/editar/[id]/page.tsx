@@ -153,15 +153,31 @@ const allocateForDay = (dateStr: string, availableCollabs: Colaborador[]) => {
     return pB - pA;
   });
   
-  const slots = [
+  const numAvailable = pool.length;
+  
+  const allSlots = [
     { funcao: 'Resgatista 1', roleType: 'Resgatista' },
     { funcao: 'Resgatista 2', roleType: 'Resgatista' },
     { funcao: 'Monitor I (Tirolesa)', roleType: 'Monitor' },
     { funcao: 'Monitor II (Base)', roleType: 'Monitor' },
     { funcao: 'Monitor III (Bike/Caixa)', roleType: 'Monitor' },
-    { funcao: 'Caixa', roleType: 'Caixa' }
+    { funcao: 'Caixa', roleType: 'Caixa' },
+    { funcao: 'Monitor IV (Tirolesa/Base)', roleType: 'Monitor' }
   ];
   
+  // Decide how many slots to fill based on the number of available people (max 7)
+  const maxSlotsToFill = Math.min(numAvailable, 7);
+  
+  const slots: typeof allSlots = [];
+  if (maxSlotsToFill >= 1) slots.push(allSlots[0]); // Resgatista 1
+  if (maxSlotsToFill >= 2) slots.push(allSlots[1]); // Resgatista 2
+  if (maxSlotsToFill >= 3) slots.push(allSlots[2]); // Monitor I
+  if (maxSlotsToFill >= 4) slots.push(allSlots[3]); // Monitor II
+  if (maxSlotsToFill >= 5) slots.push(allSlots[4]); // Monitor III
+  if (maxSlotsToFill >= 6) slots.push(allSlots[5]); // Caixa
+  if (maxSlotsToFill >= 7) slots.push(allSlots[6]); // Monitor IV
+
+  // First pass: try matching preferred roles
   for (const slot of slots) {
     const candidate = pool.find(c => c.funcao_padrao === slot.roleType && !assignedIds.has(c.id));
     if (candidate) {
@@ -176,6 +192,7 @@ const allocateForDay = (dateStr: string, availableCollabs: Colaborador[]) => {
     }
   }
   
+  // Second pass: fill any remaining unfilled slots with anyone left in the pool
   for (const slot of slots) {
     const isFilled = dayItens.some(item => item.funcao === slot.funcao);
     if (isFilled) continue;

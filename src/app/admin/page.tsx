@@ -94,6 +94,9 @@ export default function AdminDashboardPage() {
       monitor2: '',
       monitor3: '',
       caixa: '',
+      monitor4: '',
+      hasMoreThan5: dayItems.length > 5,
+      hasMoreThan6: dayItems.length > 6,
     };
     
     const genericResgatistas: any[] = [];
@@ -117,6 +120,8 @@ export default function AdminDashboardPage() {
         result.monitor3 = displayName;
       } else if (func === 'Caixa') {
         result.caixa = displayName;
+      } else if (func === 'Monitor IV (Tirolesa/Base)') {
+        result.monitor4 = displayName;
       } else if (func === 'Resgatista') {
         genericResgatistas.push(item);
       } else if (func === 'Monitor') {
@@ -159,6 +164,8 @@ export default function AdminDashboardPage() {
         result.monitor2 = displayName;
       } else if (!result.monitor3) {
         result.monitor3 = displayName;
+      } else if (!result.monitor4) {
+        result.monitor4 = displayName;
       }
     });
 
@@ -173,28 +180,36 @@ export default function AdminDashboardPage() {
           <tbody>
             <tr>
               <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Resgatista 1</td>
-              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.resgatista1}</td>
+              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.resgatista1 || <span className="text-stone-400 font-normal italic">Vazio</span>}</td>
             </tr>
             <tr>
               <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Resgatista 2</td>
-              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.resgatista2}</td>
+              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.resgatista2 || <span className="text-stone-400 font-normal italic">Vazio</span>}</td>
             </tr>
             <tr>
               <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Monitor I (Tirolesa)</td>
-              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.monitor1}</td>
+              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.monitor1 || <span className="text-stone-400 font-normal italic">Vazio</span>}</td>
             </tr>
             <tr>
               <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Monitor II (Base)</td>
-              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.monitor2}</td>
+              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.monitor2 || <span className="text-stone-400 font-normal italic">Vazio</span>}</td>
             </tr>
             <tr>
               <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Monitor III (Bike/Caixa)</td>
-              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.monitor3}</td>
+              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.monitor3 || <span className="text-stone-400 font-normal italic">Vazio</span>}</td>
             </tr>
-            <tr>
-              <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Caixa</td>
-              <td className="w-1/2 border border-black px-4 py-2 text-center">{data.caixa}</td>
-            </tr>
+            {(data.caixa || data.hasMoreThan5) && (
+              <tr>
+                <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Caixa</td>
+                <td className="w-1/2 border border-black px-4 py-2 text-center">{data.caixa || <span className="text-stone-400 font-normal italic">Vazio</span>}</td>
+              </tr>
+            )}
+            {(data.monitor4 || data.hasMoreThan6) && (
+              <tr>
+                <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Monitor IV (Tirolesa/Base)</td>
+                <td className="w-1/2 border border-black px-4 py-2 text-center">{data.monitor4 || <span className="text-stone-400 font-normal italic">Vazio</span>}</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
