@@ -199,7 +199,19 @@ export default function CollaboratorPage() {
     try {
       setLoading(true);
       const ativa = await db.getEscalaAtiva();
-      setEscalaAtiva(ativa);
+      
+      if (ativa) {
+        // Automatically hide the active scale after Sunday at 22:00
+        const now = new Date();
+        const threshold = new Date(ativa.data_fim + 'T22:00:00');
+        if (now >= threshold) {
+          setEscalaAtiva(null);
+        } else {
+          setEscalaAtiva(ativa);
+        }
+      } else {
+        setEscalaAtiva(null);
+      }
 
       const todas = await db.getEscalas();
       setHistoricoEscalas(todas);
