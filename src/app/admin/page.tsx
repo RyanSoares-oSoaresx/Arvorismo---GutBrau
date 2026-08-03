@@ -23,11 +23,28 @@ import {
   Printer,
   X,
   Share2,
-  Clipboard
+  Clipboard,
+  FileText,
+  MessageSquare
 } from 'lucide-react';
 import { db } from '@/lib/db';
-import { Escala } from '@/types/database';
 import { formatDate } from '@/lib/utils';
+import { Escala, Colaborador } from '@/types/database';
+
+interface AdminReportItem {
+  colaborador: Colaborador;
+  totalTurnos: number;
+  diasTrabalhadosCount: number;
+  diasCanceladosCount: number;
+  detalhesTurnos: {
+    data: string;
+    funcao: string;
+    turno: string;
+    status: string; // 'Trabalhado' | 'Cancelado'
+    comentario_interno?: string;
+    treinamento?: boolean;
+  }[];
+}
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -45,6 +62,12 @@ export default function AdminDashboardPage() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportEscala, setExportEscala] = useState<any | null>(null);
   const [exportLoading, setExportLoading] = useState(false);
+
+  // Admin Report state
+  const [isAdminReportOpen, setIsAdminReportOpen] = useState(false);
+  const [adminReportLoading, setAdminReportLoading] = useState(false);
+  const [adminReportData, setAdminReportData] = useState<AdminReportItem[]>([]);
+  const [adminReportMonth, setAdminReportMonth] = useState('');
 
   const handleExportScale = async (escala: Escala) => {
     setExportLoading(true);
@@ -335,6 +358,142 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const getUniqueMonths = () => {
+    const months = new Set<string>();
+    escalas.forEach(escala => {
+      const date = new Date(escala.data_inicio + 'T00:00:00');
+      const monthStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      months.add(monthStr);
+    });
+    return Array.from(months).sort().reverse();
+  };
+
+  const generateAdminReport = async (monthFilter: string) => {
+    try {
+      setAdminReportLoading(true);
+      const allScales = await db.getEscalas();
+      
+      const filteredScales = allScales.filter(escala => {
+        if (!monthFilter) return true;
+        const scaleDate = new Date(escala.data_inicio + 'T00:00:00');
+        const scaleMonth = `${scaleDate.getFullYear()}-${String(scaleDate.getMonth() + 1).padStart(2, '0')}`;
+        return scaleMonth === monthFilter;
+      });
+
+      const detailedScales = await Promise.all(
+        filteredScales.map(async (escala) => {
+          const full = await db.getEscalaById(escala.id);
+          return full;
+        })
+      );
+
+      const allCollabs = await db.getColaboradores();
+
+      const reportItems: AdminReportItem[] = allCollabs.map(collab => {
+        const matchingShifts: any[] = [];
+        let totalShifts = 0;
+        let diasTrabalhados = 0;
+        let diasCancelados = 0;
+
+        detailedScales.forEach(escala => {
+          if (!escala) return;
+          escala.itens.forEach(item => {
+            if (item.colaborador_id === collab.id) {
+              totalShifts++;
+              const dateObj = new Date(item.data + 'T00:00:00');
+              const dayOfWeek = dateObj.getDay();
+              const isSat = dayOfWeek === 6;
+              const isSun = dayOfWeek === 0;
+              
+              let isCanceled = false;
+              if (isSat && escala.sabado_cancelado) isCanceled = true;
+              else if (isSun && escala.domingo_cancelado) isCanceled = true;
+
+              if (isCanceled) {
+                diasCancelados++;
+              } else {
+                diasTrabalhados++;
+              }
+
+              matchingShifts.push({
+                data: item.data,
+                funcao: item.funcao,
+                turno: item.turno,
+                status: isCanceled ? 'Cancelado' : 'Trabalhado',
+                comentario_interno: item.comentario_interno || '',
+                treinamento: !!item.treinamento,
+              });
+            }
+          });
+        });
+
+        matchingShifts.sort((a, b) => b.data.localeCompare(a.data));
+
+        return {
+          colaborador: collab,
+          totalTurnos: totalShifts,
+          diasTrabalhadosCount: diasTrabalhados,
+          diasCanceladosCount: diasCancelados,
+          detalhesTurnos: matchingShifts,
+        };
+      });
+
+      reportItems.sort((a, b) => a.colaborador.nome.localeCompare(b.colaborador.nome));
+      setAdminReportData(reportItems);
+    } catch (err) {
+      console.error('Erro ao gerar relatório administrativo:', err);
+      alert('Erro ao carregar dados do relatório.');
+    } finally {
+      setAdminReportLoading(false);
+    }
+  };
+
+  const handleOpenAdminReport = () => {
+    setIsAdminReportOpen(true);
+    const months = getUniqueMonths();
+    const defaultMonth = months.length > 0 ? months[0] : '';
+    setAdminReportMonth(defaultMonth);
+    generateAdminReport(defaultMonth);
+  };
+
+  const handleCopyAdminReport = () => {
+    let text = `📊 *RELATÓRIO ADMINISTRATIVO - GUTBRAU*\n`;
+    if (adminReportMonth) {
+      const [year, month] = adminReportMonth.split('-');
+      const monthNames = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      ];
+      text += `📅 Período: *${monthNames[parseInt(month) - 1]} de ${year}*\n\n`;
+    } else {
+      text += `📅 Período: *Todos os Tempos*\n\n`;
+    }
+
+    adminReportData.forEach(item => {
+      const statusText = item.colaborador.ativo ? 'Ativo' : 'Inativo';
+      text += `👤 *${item.colaborador.nome}* (${item.colaborador.funcao_padrao})\n`;
+      text += `⭐ Pontos: *${item.colaborador.pontos || 10} pts* | Status: ${statusText}\n`;
+      text += `📅 Escalado: ${item.totalTurnos} vezes (${item.diasTrabalhadosCount} presenciais, ${item.diasCanceladosCount} cancelados)\n`;
+      
+      if (item.detalhesTurnos.length > 0) {
+        text += `📝 Histórico de Turnos:\n`;
+        item.detalhesTurnos.forEach(turno => {
+          const dateFormatted = formatDate(turno.data, true);
+          let detail = `  • ${dateFormatted} - ${turno.funcao} (${turno.turno}) [${turno.status}]`;
+          if (turno.treinamento) detail += ` [Treino]`;
+          if (turno.comentario_interno) detail += ` | Obs: _${turno.comentario_interno}_`;
+          text += detail + `\n`;
+        });
+      } else {
+        text += `📝 Sem turnos agendados no período.\n`;
+      }
+      text += `\n`;
+    });
+
+    navigator.clipboard.writeText(text);
+    alert('Relatório copiado com sucesso para a área de transferência!');
+  };
+
   if (checkingAuth) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center gap-4">
@@ -508,10 +667,20 @@ export default function AdminDashboardPage() {
 
         {/* List of existing scales */}
         <div className="space-y-5">
-          <h3 className="text-lg font-serif font-extrabold text-stone-850 dark:text-stone-150 flex items-center gap-2 pb-2 border-b border-stone-200 dark:border-stone-800">
-            <Calendar className="w-5 h-5 text-accent" />
-            Histórico de Escalas Criadas
-          </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-stone-200 dark:border-stone-800">
+            <h3 className="text-lg font-serif font-extrabold text-stone-850 dark:text-stone-150 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-accent" />
+              Histórico de Escalas Criadas
+            </h3>
+            
+            <button
+              onClick={handleOpenAdminReport}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 hover:bg-stone-200 dark:bg-stone-900 dark:hover:bg-stone-850 text-stone-700 dark:text-stone-300 text-xs font-bold rounded-xl transition-all border border-stone-250 dark:border-stone-800"
+            >
+              <FileText className="w-3.5 h-3.5 text-accent" />
+              Relatório Geral
+            </button>
+          </div>
 
           {loadingEscalas ? (
             <div className="flex justify-center items-center py-12">
@@ -765,6 +934,265 @@ export default function AdminDashboardPage() {
                   <Printer className="w-4 h-4" />
                   Imprimir / Salvar PDF
                 </button>
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Administrative Report Modal overlay */}
+      {isAdminReportOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-sm transition-all duration-300 animate-fadeIn print:absolute print:inset-0 print:bg-white print:p-0 print:backdrop-blur-none animate-fadeIn">
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-850 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col relative overflow-hidden animate-scaleIn print:border-none print:shadow-none print:max-h-none print:w-full print:overflow-visible">
+            
+            {/* Modal Header */}
+            <div className="p-5 border-b border-stone-200 dark:border-stone-800 flex justify-between items-center bg-stone-50/50 dark:bg-stone-900/50 print:hidden">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-accent" />
+                <div>
+                  <h3 className="font-serif text-base font-bold text-stone-900 dark:text-white">
+                    Relatório Administrativo Geral
+                  </h3>
+                  <p className="text-3xs text-stone-500 dark:text-stone-450 font-bold uppercase tracking-wider">
+                    Estatísticas consolidadas da equipe e histórico de turnos
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAdminReportOpen(false)}
+                className="p-1.5 hover:bg-stone-250 dark:hover:bg-stone-850 rounded-full text-stone-450 dark:text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 transition-colors"
+                title="Fechar"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Filter controls at the top (hidden in print) */}
+            <div className="px-6 py-4 bg-white dark:bg-stone-900 border-b border-stone-150 dark:border-stone-850 flex flex-wrap items-center justify-between gap-3 print:hidden">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-stone-500 dark:text-stone-450 uppercase tracking-wider">Filtrar Período:</span>
+                <select
+                  value={adminReportMonth}
+                  onChange={(e) => {
+                    setAdminReportMonth(e.target.value);
+                    generateAdminReport(e.target.value);
+                  }}
+                  className="bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-3 py-1.5 rounded-xl text-xs font-semibold text-stone-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-accent"
+                >
+                  <option value="">Todos os Tempos</option>
+                  {getUniqueMonths().map(m => {
+                    const [year, month] = m.split('-');
+                    const monthNames = [
+                      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+                    ];
+                    return (
+                      <option key={m} value={m}>
+                        {monthNames[parseInt(month) - 1]} de {year}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <div className="text-3xs text-stone-450 font-bold uppercase tracking-wider">
+                Total de membros analisados: {adminReportData.length}
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-stone-50 dark:bg-stone-950/20 print:bg-white print:p-0 print:overflow-visible">
+              {adminReportLoading ? (
+                <div className="flex justify-center items-center py-16">
+                  <div className="w-8 h-8 border-3 border-accent/20 border-t-accent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <div id="admin-report-container" className="space-y-8 print:space-y-12">
+                  
+                  {/* Print Header */}
+                  <div className="hidden print:flex items-center justify-between pb-6 border-b border-stone-300 mb-8">
+                    <div>
+                      <h1 className="text-xl font-serif font-bold text-stone-900">Relatório Administrativo de Equipe</h1>
+                      <p className="text-xs text-stone-500 mt-1">
+                        Período: {adminReportMonth ? adminReportMonth : 'Todos os Tempos'}
+                      </p>
+                    </div>
+                    <img src="/logo_ext_verde.png" alt="GutBrau Logo" className="h-10 w-auto object-contain" />
+                  </div>
+
+                  {/* Summary Table */}
+                  <div className="bg-white dark:bg-stone-900 p-5 rounded-2xl border border-stone-200 dark:border-stone-850 shadow-sm print:border-none print:shadow-none print:p-0">
+                    <h4 className="font-serif text-sm font-bold text-stone-850 dark:text-stone-100 mb-4 flex items-center gap-1.5 border-b border-stone-100 dark:border-stone-800 pb-2">
+                      Resumo da Frequência e Pontuação
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-stone-200 dark:border-stone-800 text-stone-450 dark:text-stone-500 font-bold uppercase tracking-wider text-[10px]">
+                            <th className="py-2.5 px-3">Colaborador</th>
+                            <th className="py-2.5 px-3">Função Padrão</th>
+                            <th className="py-2.5 px-3 text-center">Pontos (Score)</th>
+                            <th className="py-2.5 px-3 text-center">Frequência</th>
+                            <th className="py-2.5 px-3 text-center">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-stone-100 dark:divide-stone-800/60 font-medium">
+                          {adminReportData.map(item => (
+                            <tr key={item.colaborador.id} className="hover:bg-stone-50/50 dark:hover:bg-stone-950/20 text-stone-800 dark:text-stone-200">
+                              <td className="py-3 px-3 font-bold">{item.colaborador.nome}</td>
+                              <td className="py-3 px-3 text-stone-550 dark:text-stone-400">{item.colaborador.funcao_padrao || 'Recreador'}</td>
+                              <td className="py-3 px-3 text-center font-extrabold text-stone-900 dark:text-stone-100">
+                                ⭐ {item.colaborador.pontos ?? 10} pts
+                              </td>
+                              <td className="py-3 px-3 text-center text-stone-600 dark:text-stone-300">
+                                <span className="text-emerald-650 dark:text-emerald-400 font-extrabold">{item.diasTrabalhadosCount}</span>
+                                <span className="text-stone-450 mx-1">/</span>
+                                <span className="font-bold">{item.totalTurnos}</span>
+                                {item.diasCanceladosCount > 0 && (
+                                  <span className="text-red-500 text-[10px] font-bold ml-1.5">({item.diasCanceladosCount} cancel)</span>
+                                )}
+                              </td>
+                              <td className="py-3 px-3 text-center">
+                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                  item.colaborador.ativo
+                                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
+                                    : 'bg-stone-100 text-stone-500 dark:bg-stone-800 dark:text-stone-400 border border-stone-200 dark:border-stone-700'
+                                }`}>
+                                  {item.colaborador.ativo ? 'Ativo' : 'Inativo'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                          {adminReportData.length === 0 && (
+                            <tr>
+                              <td colSpan={5} className="py-8 text-center text-stone-450 italic">
+                                Nenhum colaborador cadastrado.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Detailed shift breakdown for each collaborator */}
+                  <div className="space-y-6 print:space-y-8">
+                    <h4 className="font-serif text-sm font-bold text-stone-850 dark:text-stone-150 border-b border-stone-200 dark:border-stone-800 pb-2 flex items-center gap-1.5">
+                      Detalhamento de Turnos e Comentários Administrativos
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 gap-5">
+                      {adminReportData.map(item => (
+                        <div 
+                          key={item.colaborador.id}
+                          className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-850 rounded-2xl p-5 shadow-sm space-y-3.5 break-inside-avoid print:border-none print:shadow-none print:p-0 print:border-b print:border-stone-205 print:pb-6 print:rounded-none"
+                        >
+                          <div className="flex justify-between items-center pb-2 border-b border-stone-100 dark:border-stone-800/60">
+                            <h5 className="font-bold text-stone-850 dark:text-stone-100 text-sm">
+                              {item.colaborador.nome} 
+                              <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 ml-1.5">
+                                ({item.colaborador.funcao_padrao})
+                              </span>
+                            </h5>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-extrabold text-stone-750 dark:text-stone-300 uppercase tracking-wider bg-stone-100 dark:bg-stone-950 px-2 py-0.5 rounded-md">
+                                ⭐ {item.colaborador.pontos ?? 10} pts
+                              </span>
+                            </div>
+                          </div>
+
+                          {item.detalhesTurnos.length === 0 ? (
+                            <p className="text-xs text-stone-400 dark:text-stone-550 italic py-2">
+                              Sem escalas registradas no período selecionado.
+                            </p>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left text-3xs font-medium">
+                                <thead>
+                                  <tr className="border-b border-stone-100 dark:border-stone-800 text-stone-450 dark:text-stone-500 uppercase tracking-wider text-[9px]">
+                                    <th className="py-2 px-2">Data</th>
+                                    <th className="py-2 px-2">Função Exercida</th>
+                                    <th className="py-2 px-2 text-center">Horário</th>
+                                    <th className="py-2 px-2 text-center">Status</th>
+                                    <th className="py-2 px-2 text-center">Treinamento</th>
+                                    <th className="py-2 px-2">Anotação Administrativa (Interna)</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-stone-50 dark:divide-stone-900/40 text-stone-700 dark:text-stone-300">
+                                  {item.detalhesTurnos.map((turno, idx) => (
+                                    <tr key={idx} className="hover:bg-stone-50/20 dark:hover:bg-stone-950/10">
+                                      <td className="py-2.5 px-2 font-bold">{formatDate(turno.data, true)}</td>
+                                      <td className="py-2.5 px-2 font-semibold text-stone-850 dark:text-stone-200">{turno.funcao}</td>
+                                      <td className="py-2.5 px-2 text-center text-stone-550 dark:text-stone-400">{turno.turno}</td>
+                                      <td className="py-2.5 px-2 text-center">
+                                        <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider ${
+                                          turno.status === 'Trabalhado'
+                                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-450'
+                                            : 'bg-red-500/10 text-red-600 dark:text-red-400'
+                                        }`}>
+                                          {turno.status === 'Trabalhado' ? 'Presença' : 'Cancelado'}
+                                        </span>
+                                      </td>
+                                      <td className="py-2.5 px-2 text-center">
+                                        {turno.treinamento ? (
+                                          <span className="text-[8px] bg-amber-500/15 text-amber-700 dark:text-amber-450 px-1.5 py-0.2 rounded font-bold uppercase tracking-wider">Sim</span>
+                                        ) : (
+                                          <span className="text-stone-400">-</span>
+                                        )}
+                                      </td>
+                                      <td className="py-2.5 px-2 italic text-stone-800 dark:text-stone-250 max-w-[200px] truncate" title={turno.comentario_interno}>
+                                        {turno.comentario_interno ? (
+                                          <div className="flex items-center gap-1">
+                                            <MessageSquare className="w-3 h-3 text-stone-400 flex-shrink-0" />
+                                            <span>{turno.comentario_interno}</span>
+                                          </div>
+                                        ) : (
+                                          <span className="text-stone-400/60">-</span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-5 border-t border-stone-200 dark:border-stone-800 flex justify-end gap-3 bg-stone-50/50 dark:bg-stone-900/50 print:hidden">
+              <button
+                onClick={() => setIsAdminReportOpen(false)}
+                className="px-4 py-2 bg-stone-200 hover:bg-stone-300 dark:bg-stone-800 dark:hover:bg-stone-750 text-stone-850 dark:text-stone-200 text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
+              >
+                Fechar
+              </button>
+              
+              {!adminReportLoading && adminReportData.length > 0 && (
+                <>
+                  <button
+                    onClick={handleCopyAdminReport}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-stone-150 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-stone-850 dark:text-stone-250 text-xs font-bold uppercase tracking-wider rounded-xl transition-all border border-stone-250 dark:border-stone-800"
+                  >
+                    <Share2 className="w-4 h-4 text-accent" />
+                    Copiar Resumo (WhatsApp)
+                  </button>
+                  
+                  <button
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shadow-accent/15"
+                  >
+                    <Printer className="w-4 h-4" />
+                    Imprimir / Salvar PDF
+                  </button>
+                </>
               )}
             </div>
 
