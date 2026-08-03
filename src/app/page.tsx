@@ -703,7 +703,7 @@ export default function CollaboratorPage() {
 
       {/* Monthly Report Modal overlay */}
       {isReportOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-md transition-all duration-300 animate-fadeIn print:absolute print:inset-0 print:bg-white print:p-0 print:backdrop-blur-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/75 transition-all duration-300 animate-fadeIn print:absolute print:inset-0 print:bg-white print:p-0">
           <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-850 rounded-3xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col relative overflow-hidden animate-scaleIn print:border-none print:shadow-none print:max-h-none print:w-full print:overflow-visible">
             
             {/* Modal Header */}
