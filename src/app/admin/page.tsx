@@ -1141,11 +1141,11 @@ export default function AdminDashboardPage() {
                                           <span className="text-stone-400">-</span>
                                         )}
                                       </td>
-                                      <td className="py-2.5 px-2 italic text-stone-800 dark:text-stone-250 max-w-[200px] truncate" title={turno.comentario_interno}>
+                                      <td className="py-2.5 px-2 italic text-stone-800 dark:text-stone-250 break-words" title={turno.comentario_interno}>
                                         {turno.comentario_interno ? (
-                                          <div className="flex items-center gap-1">
-                                            <MessageSquare className="w-3 h-3 text-stone-400 flex-shrink-0" />
-                                            <span>{turno.comentario_interno}</span>
+                                          <div className="flex items-start gap-1">
+                                            <MessageSquare className="w-3 h-3 text-stone-400 mt-1 flex-shrink-0" />
+                                            <span className="whitespace-pre-wrap">{turno.comentario_interno}</span>
                                           </div>
                                         ) : (
                                           <span className="text-stone-400/60">-</span>
