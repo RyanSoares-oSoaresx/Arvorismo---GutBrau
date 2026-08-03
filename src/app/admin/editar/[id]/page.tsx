@@ -1029,7 +1029,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                                     value={item.comentario_interno || ''}
                                     onChange={(e) => handleUpdateShift(item.globalIndex, 'comentario_interno', e.target.value)}
                                     placeholder="Obs interna"
-                                    className="w-full bg-white dark:bg-stone-955 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60 text-stone-900 dark:text-stone-100"
+                                    className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60 text-stone-900 dark:text-stone-100"
                                   />
                                 </div>
 
