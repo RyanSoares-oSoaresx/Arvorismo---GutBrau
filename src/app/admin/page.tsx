@@ -36,11 +36,12 @@ interface AdminReportItem {
   totalTurnos: number;
   diasTrabalhadosCount: number;
   diasCanceladosCount: number;
+  diasFaltasCount: number;
   detalhesTurnos: {
     data: string;
     funcao: string;
     turno: string;
-    status: string; // 'Trabalhado' | 'Cancelado'
+    status: string; // 'Trabalhado' | 'Cancelado' | 'Falta'
     comentario_interno?: string;
     treinamento?: boolean;
   }[];
@@ -409,6 +410,7 @@ export default function AdminDashboardPage() {
         let totalShifts = 0;
         let diasTrabalhados = 0;
         let diasCancelados = 0;
+        let diasFaltas = 0;
 
         detailedScales.forEach(escala => {
           if (!escala) return;
@@ -424,8 +426,13 @@ export default function AdminDashboardPage() {
               if (isSat && escala.sabado_cancelado) isCanceled = true;
               else if (isSun && escala.domingo_cancelado) isCanceled = true;
 
+              let shiftStatus = 'Trabalhado';
               if (isCanceled) {
                 diasCancelados++;
+                shiftStatus = 'Cancelado';
+              } else if (item.falta) {
+                diasFaltas++;
+                shiftStatus = 'Falta';
               } else {
                 diasTrabalhados++;
               }
@@ -434,7 +441,7 @@ export default function AdminDashboardPage() {
                 data: item.data,
                 funcao: item.funcao,
                 turno: item.turno,
-                status: isCanceled ? 'Cancelado' : 'Trabalhado',
+                status: shiftStatus,
                 comentario_interno: item.comentario_interno || '',
                 treinamento: !!item.treinamento,
               });
@@ -449,6 +456,7 @@ export default function AdminDashboardPage() {
           totalTurnos: totalShifts,
           diasTrabalhadosCount: diasTrabalhados,
           diasCanceladosCount: diasCancelados,
+          diasFaltasCount: diasFaltas,
           detalhesTurnos: matchingShifts,
         };
       });
@@ -489,7 +497,10 @@ export default function AdminDashboardPage() {
       const statusText = item.colaborador.ativo ? 'Ativo' : 'Inativo';
       text += `👤 *${item.colaborador.nome}* (${item.colaborador.funcao_padrao})\n`;
       text += `⭐ Pontos: *${item.colaborador.pontos || 10} pts* | Status: ${statusText}\n`;
-      text += `📅 Escalado: ${item.totalTurnos} vezes (${item.diasTrabalhadosCount} presenciais, ${item.diasCanceladosCount} cancelados)\n`;
+      let scheduledDetail = `${item.diasTrabalhadosCount} presenciais`;
+      if (item.diasFaltasCount > 0) scheduledDetail += `, ${item.diasFaltasCount} faltas`;
+      if (item.diasCanceladosCount > 0) scheduledDetail += `, ${item.diasCanceladosCount} cancelados`;
+      text += `📅 Escalado: ${item.totalTurnos} vezes (${scheduledDetail})\n`;
       
       if (item.detalhesTurnos.length > 0) {
         text += `📝 Histórico de Turnos:\n`;
@@ -1065,8 +1076,11 @@ export default function AdminDashboardPage() {
                                 <span className="text-emerald-650 dark:text-emerald-400 font-extrabold">{item.diasTrabalhadosCount}</span>
                                 <span className="text-stone-450 mx-1">/</span>
                                 <span className="font-bold">{item.totalTurnos}</span>
+                                {item.diasFaltasCount > 0 && (
+                                  <span className="text-red-500 font-extrabold ml-1.5" title={`${item.diasFaltasCount} faltas registradas`}>({item.diasFaltasCount} F)</span>
+                                )}
                                 {item.diasCanceladosCount > 0 && (
-                                  <span className="text-red-500 text-[10px] font-bold ml-1.5">({item.diasCanceladosCount} cancel)</span>
+                                  <span className="text-red-500/80 text-[10px] font-bold ml-1.5">({item.diasCanceladosCount} cancel)</span>
                                 )}
                               </td>
                               <td className="py-3 px-3 text-center">
@@ -1142,12 +1156,18 @@ export default function AdminDashboardPage() {
                                       <td className="py-2.5 px-2 font-semibold text-stone-850 dark:text-stone-200">{turno.funcao}</td>
                                       <td className="py-2.5 px-2 text-center text-stone-550 dark:text-stone-400">{turno.turno}</td>
                                       <td className="py-2.5 px-2 text-center">
-                                        <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider ${
+                                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
                                           turno.status === 'Trabalhado'
                                             ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-450'
-                                            : 'bg-red-500/10 text-red-600 dark:text-red-400'
+                                            : turno.status === 'Falta'
+                                              ? 'bg-red-500/10 text-red-650 dark:text-red-400 border border-red-500/20'
+                                              : 'bg-stone-100 text-stone-500 dark:bg-stone-850 dark:text-stone-400'
                                         }`}>
-                                          {turno.status === 'Trabalhado' ? 'Presença' : 'Cancelado'}
+                                          {turno.status === 'Trabalhado'
+                                            ? 'Presença'
+                                            : turno.status === 'Falta'
+                                              ? 'Falta'
+                                              : 'Cancelado'}
                                         </span>
                                       </td>
                                       <td className="py-2.5 px-2 text-center">

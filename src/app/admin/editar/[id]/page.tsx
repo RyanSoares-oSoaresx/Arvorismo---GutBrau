@@ -253,6 +253,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
     funcao: string;
     treinamento?: boolean;
     comentario_interno?: string;
+    falta?: boolean;
   }[]>([]);
   const [saveLoading, setSaveLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -368,6 +369,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
             funcao: item.funcao,
             treinamento: item.treinamento || false,
             comentario_interno: item.comentario_interno || '',
+            falta: item.falta || false,
           }));
           setItens(mappedItens);
           calculateWeekDays(satStr, mappedItens);
@@ -450,6 +452,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
         funcao: firstCollab.funcao_padrao || 'Monitor',
         treinamento: false,
         comentario_interno: '',
+        falta: false,
       }
     ]);
   };
@@ -505,7 +508,44 @@ export default function EditEscalaPage({ params }: EditPageProps) {
         funcao: item.funcao,
         treinamento: item.treinamento || false,
         comentario_interno: item.comentario_interno || '',
+        falta: item.falta || false,
       }));
+
+      // Adjust collaborator points based on new absences
+      let oldItens: any[] = [];
+      if (!isNew) {
+        const oldEscala = await db.getEscalaById(id);
+        oldItens = oldEscala ? oldEscala.itens : [];
+      }
+
+      const collabsToUpdate: Colaborador[] = [];
+      const currentCollabs = await db.getColaboradores();
+
+      currentCollabs.forEach(collab => {
+        const isAbsentNow = itemsPayload.some(item => item.colaborador_id === collab.id && item.falta);
+        const wasAbsentBefore = oldItens.some(item => item.colaborador_id === collab.id && item.falta);
+
+        if (isAbsentNow && !wasAbsentBefore) {
+          const currentPts = collab.pontos !== undefined ? collab.pontos : 10;
+          const newPts = Math.max(0, currentPts - 3); // Deduct 3 points for absence
+          collabsToUpdate.push({ ...collab, pontos: newPts });
+        } else if (!isAbsentNow && wasAbsentBefore) {
+          const currentPts = collab.pontos !== undefined ? collab.pontos : 10;
+          const newPts = currentPts + 3; // Restore 3 points if present again
+          collabsToUpdate.push({ ...collab, pontos: newPts });
+        }
+      });
+
+      for (const updatedCollab of collabsToUpdate) {
+        await db.saveColaborador({
+          id: updatedCollab.id,
+          nome: updatedCollab.nome,
+          telefone: updatedCollab.telefone,
+          funcao_padrao: updatedCollab.funcao_padrao,
+          ativo: updatedCollab.ativo,
+          pontos: updatedCollab.pontos,
+        });
+      }
 
       await db.saveEscala(escalaPayload, itemsPayload);
       router.push('/admin');
@@ -981,19 +1021,33 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                                   </select>
                                 </div>
 
-                                <div className="sm:col-span-3 flex items-center gap-2">
+                                <div className="sm:col-span-2 flex items-center gap-2">
                                   <MessageSquare className="w-4 h-4 text-stone-400 flex-shrink-0" />
                                   <input
                                     type="text"
                                     disabled={finalizada}
                                     value={item.comentario_interno || ''}
                                     onChange={(e) => handleUpdateShift(item.globalIndex, 'comentario_interno', e.target.value)}
-                                    placeholder="Comentário interno (obs)"
-                                    className="w-full bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60"
+                                    placeholder="Obs interna"
+                                    className="w-full bg-white dark:bg-stone-955 border border-stone-200 dark:border-stone-800 px-2 py-1.5 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-accent font-medium disabled:opacity-60 text-stone-900 dark:text-stone-100"
                                   />
                                 </div>
 
-                                <div className="sm:col-span-2 flex items-center justify-end gap-2">
+                                <div className="sm:col-span-3 flex items-center justify-end gap-1.5">
+                                  <button
+                                    type="button"
+                                    disabled={finalizada}
+                                    onClick={() => handleUpdateShift(item.globalIndex, 'falta', !item.falta)}
+                                    className={`px-2 py-1.5 rounded-lg border transition-all text-[9px] font-extrabold uppercase tracking-wider flex items-center justify-center flex-1 sm:flex-initial select-none disabled:opacity-50 ${
+                                      item.falta 
+                                        ? 'bg-red-500/20 text-red-750 border-red-500/30 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20' 
+                                        : 'bg-emerald-500/20 text-emerald-700 border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-450 dark:border-emerald-500/20'
+                                    }`}
+                                    title={item.falta ? "Falta registrada (Dedeuzirá 3 pontos)" : "Presença confirmada"}
+                                  >
+                                    {item.falta ? 'Falta' : 'Presença'}
+                                  </button>
+                                  
                                   <button
                                     type="button"
                                     disabled={finalizada}

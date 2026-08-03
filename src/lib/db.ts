@@ -397,6 +397,7 @@ export const db = {
         funcao: item.funcao,
         treinamento: (item as any).treinamento || false,
         comentario_interno: (item as any).comentario_interno || '',
+        falta: (item as any).falta || false,
       }));
 
       if (itemsToInsert.length > 0) {

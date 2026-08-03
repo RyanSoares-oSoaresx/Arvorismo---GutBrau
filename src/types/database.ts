@@ -29,6 +29,7 @@ export interface EscalaItem {
   funcao: string;      // e.g. 'Caixa'
   treinamento?: boolean;
   comentario_interno?: string;
+  falta?: boolean;
   created_at?: string;
   // Joined relation fields for convenience
   colaborador?: Colaborador;
