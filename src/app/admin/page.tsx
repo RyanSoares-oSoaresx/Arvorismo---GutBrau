@@ -311,6 +311,7 @@ export default function AdminDashboardPage() {
           funcao: item.funcao,
           treinamento: item.treinamento,
           comentario_interno: item.comentario_interno,
+          falta: item.falta,
         }))
       );
 
@@ -340,6 +341,7 @@ export default function AdminDashboardPage() {
           funcao: item.funcao,
           treinamento: item.treinamento,
           comentario_interno: item.comentario_interno,
+          falta: item.falta,
         }))
       );
 
@@ -364,6 +366,7 @@ export default function AdminDashboardPage() {
           funcao: item.funcao,
           treinamento: item.treinamento,
           comentario_interno: item.comentario_interno,
+          falta: item.falta,
         }))
       );
 
