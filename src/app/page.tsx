@@ -382,7 +382,7 @@ export default function CollaboratorPage() {
       {/* Hero Header with Real GutBrau Background */}
       <div 
         className="w-full py-20 relative flex items-center justify-center text-center px-4 overflow-hidden bg-cover bg-center"
-        style={{ backgroundImage: "url('/gutbrau_moinho.jpg')" }}
+        style={{ backgroundImage: "url('/gutbrau_ambiente.jpg')" }}
       >
         {/* Dark Forest Green Tint Overlay for High Text Readability and Brand Cohesion */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/95 via-primary/85 to-stone-950/95 mix-blend-multiply"></div>
@@ -689,7 +689,7 @@ export default function CollaboratorPage() {
             <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl overflow-hidden shadow-sm relative transition-all duration-300 hover:shadow-md">
               <div 
                 className="w-full h-36 bg-cover bg-center bg-no-repeat filter brightness-95"
-                style={{ backgroundImage: "url('/chopp_gutbrau_1785342662911.png')" }}
+                style={{ backgroundImage: "url('/gutbrau_moinho.jpg')" }}
               ></div>
               <div className="p-4 bg-stone-50/50 dark:bg-stone-900/50">
                 <p className="text-3xs text-stone-500 dark:text-stone-400 text-center leading-relaxed">

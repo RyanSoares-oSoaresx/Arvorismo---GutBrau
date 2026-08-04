@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${cinzel.variable} ${jakarta.variable} h-full antialiased`}
+      className={`${cinzel.variable} ${jakarta.variable} dark h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
         {children}
