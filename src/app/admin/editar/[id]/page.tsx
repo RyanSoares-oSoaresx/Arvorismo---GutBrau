@@ -22,7 +22,8 @@ import {
   CheckCircle,
   Unlock,
   Lock,
-  MessageSquare
+  MessageSquare,
+  GripVertical
 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { Colaborador, Escala, EscalaItem } from '@/types/database';
@@ -267,6 +268,10 @@ export default function EditEscalaPage({ params }: EditPageProps) {
   const [resultadosAnalise, setResultadosAnalise] = useState<AvailabilityParseResult[]>([]);
   const [analiseExecutada, setAnaliseExecutada] = useState(false);
   const [finalizada, setFinalizada] = useState(false);
+
+  // Drag and Drop reordering states
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [canDrag, setCanDrag] = useState<boolean>(false);
 
   const handleAnalyseAvailability = () => {
     if (!textoDisponibilidade.trim()) {
@@ -969,9 +974,50 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                             {dayItens.map(item => (
                               <div 
                                 key={item.globalIndex}
-                                className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center p-3 bg-stone-50 dark:bg-stone-900/40 border border-stone-200 dark:border-stone-800 rounded-xl animate-fadeIn"
+                                draggable={canDrag && !finalizada}
+                                onDragStart={(e) => {
+                                  e.dataTransfer.effectAllowed = 'move';
+                                  setDraggedIndex(item.globalIndex);
+                                }}
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  if (draggedIndex === null || draggedIndex === item.globalIndex) return;
+                                  
+                                  const draggedItem = itens[draggedIndex];
+                                  const targetItem = itens[item.globalIndex];
+                                  
+                                  // Limit reordering to items of the same day
+                                  if (draggedItem.data !== targetItem.data) return;
+                                  
+                                  const updated = [...itens];
+                                  updated.splice(draggedIndex, 1);
+                                  updated.splice(item.globalIndex, 0, draggedItem);
+                                  
+                                  setItens(updated);
+                                  setDraggedIndex(item.globalIndex);
+                                }}
+                                onDragEnd={() => {
+                                  setDraggedIndex(null);
+                                  setCanDrag(false);
+                                }}
+                                className={`grid grid-cols-1 sm:grid-cols-12 gap-3 items-center p-3 bg-stone-50 dark:bg-stone-900/40 border border-stone-200 dark:border-stone-800 rounded-xl transition-all duration-150 ${
+                                  draggedIndex === item.globalIndex 
+                                    ? 'opacity-40 border-dashed border-accent bg-accent/5' 
+                                    : ''
+                                }`}
                               >
-                                <div className="sm:col-span-3 flex items-center gap-2">
+                                {!finalizada && (
+                                  <div 
+                                    onMouseEnter={() => setCanDrag(true)}
+                                    onMouseLeave={() => setCanDrag(false)}
+                                    className="sm:col-span-1 flex items-center justify-center text-stone-400 dark:text-stone-600 hover:text-stone-700 dark:hover:text-stone-300 cursor-grab active:cursor-grabbing p-1 -ml-1"
+                                    title="Clique e arraste para reordenar"
+                                  >
+                                    <GripVertical className="w-4 h-4" />
+                                  </div>
+                                )}
+
+                                <div className={`${finalizada ? 'sm:col-span-3' : 'sm:col-span-2'} flex items-center gap-2`}>
                                   <User className="w-4 h-4 text-stone-400 flex-shrink-0" />
                                   <select
                                     disabled={finalizada}

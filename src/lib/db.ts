@@ -283,7 +283,8 @@ export const db = {
       const { data: itens, error: itError } = await supabase
         .from('escala_itens')
         .select('*, colaborador:colaboradores(*)')
-        .eq('escala_id', id);
+        .eq('escala_id', id)
+        .order('created_at', { ascending: true });
       
       if (itError) throw itError;
 
@@ -332,7 +333,8 @@ export const db = {
       const { data: itens, error: itError } = await supabase
         .from('escala_itens')
         .select('*, colaborador:colaboradores(*)')
-        .eq('escala_id', escala.id);
+        .eq('escala_id', escala.id)
+        .order('created_at', { ascending: true });
       
       if (itError) throw itError;
 

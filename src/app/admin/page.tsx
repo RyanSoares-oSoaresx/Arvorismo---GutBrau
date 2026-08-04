@@ -199,16 +199,16 @@ export default function AdminDashboardPage() {
               <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Monitor III (Bike/Caixa)</td>
               <td className="w-1/2 border border-black px-4 py-2 text-center">{data.monitor3 || <span className="text-stone-400 font-normal italic">Vazio</span>}</td>
             </tr>
-            {(data.caixa || data.hasMoreThan5) && (
-              <tr>
-                <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Caixa</td>
-                <td className="w-1/2 border border-black px-4 py-2 text-center">{data.caixa || <span className="text-stone-400 font-normal italic">Vazio</span>}</td>
-              </tr>
-            )}
             {(data.monitor4 || data.hasMoreThan6) && (
               <tr>
                 <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Monitor IV (Tirolesa/Base)</td>
                 <td className="w-1/2 border border-black px-4 py-2 text-center">{data.monitor4 || <span className="text-stone-400 font-normal italic">Vazio</span>}</td>
+              </tr>
+            )}
+            {(data.caixa || data.hasMoreThan5) && (
+              <tr>
+                <td className="w-1/2 border border-black px-4 py-2 font-bold bg-stone-50">Caixa</td>
+                <td className="w-1/2 border border-black px-4 py-2 text-center">{data.caixa || <span className="text-stone-400 font-normal italic">Vazio</span>}</td>
               </tr>
             )}
           </tbody>
