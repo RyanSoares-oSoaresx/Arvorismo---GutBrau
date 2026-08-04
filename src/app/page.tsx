@@ -382,7 +382,7 @@ export default function CollaboratorPage() {
       {/* Hero Header with Real GutBrau Background */}
       <div 
         className="w-full py-20 relative flex items-center justify-center text-center px-4 overflow-hidden bg-cover bg-center"
-        style={{ backgroundImage: "url('/gutbrau_ambiente.jpg')" }}
+        style={{ backgroundImage: "url('/gutbrau_moinho.jpg')" }}
       >
         {/* Dark Forest Green Tint Overlay for High Text Readability and Brand Cohesion */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/95 via-primary/85 to-stone-950/95 mix-blend-multiply"></div>
