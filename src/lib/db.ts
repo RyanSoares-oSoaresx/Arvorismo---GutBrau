@@ -58,15 +58,12 @@ const initializeMockData = () => {
   let shouldReset = false;
   if (currentCols) {
     try {
-      const parsed = JSON.parse(currentCols);
-      const currentItens = localStorage.getItem(LOCAL_STORAGE_KEYS.ESCALA_ITENS);
       const currentScales = localStorage.getItem(LOCAL_STORAGE_KEYS.ESCALAS);
-      // Reset if items count is not exactly 10 (which is the new equalized scale size)
-      // or if scales still contain the old single "cancelada" column.
+      // Reset only if scales still contain the old single "cancelada" column (legacy schema migration)
       if (
-        parsed.length < 26 || 
-        (currentScales && JSON.parse(currentScales).length < 2) ||
-        (currentScales && JSON.parse(currentScales)[0]?.hasOwnProperty('cancelada'))
+        currentScales && 
+        JSON.parse(currentScales).length > 0 &&
+        JSON.parse(currentScales)[0]?.hasOwnProperty('cancelada')
       ) {
         shouldReset = true;
       }
@@ -191,10 +188,11 @@ export const db = {
   async saveColaborador(colaborador: Omit<Colaborador, 'id'> & { id?: string }): Promise<Colaborador> {
     if (isSupabaseConfigured && supabase) {
       if (colaborador.id) {
+        const { id, ...updatePayload } = colaborador;
         const { data, error } = await supabase
           .from('colaboradores')
-          .update(colaborador)
-          .eq('id', colaborador.id)
+          .update(updatePayload)
+          .eq('id', id)
           .select()
           .single();
         if (error) throw error;
@@ -363,10 +361,11 @@ export const db = {
       let savedEscala: Escala;
       
       if (escala.id) {
+        const { id, ...updatePayload } = escala;
         const { data, error } = await supabase
           .from('escalas')
-          .update(escala)
-          .eq('id', escala.id)
+          .update(updatePayload)
+          .eq('id', id)
           .select()
           .single();
         if (error) throw error;
