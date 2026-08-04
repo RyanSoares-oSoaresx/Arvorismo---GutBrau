@@ -11,7 +11,7 @@ interface ShareWhatsAppProps {
 
 export default function ShareWhatsApp({ escala }: ShareWhatsAppProps) {
   const formatText = () => {
-    // Format date DD/MM
+    // Formata a data DD/MM
     const formatDate = (dateStr: string) => {
       const parts = dateStr.split('-');
       if (parts.length !== 3) return dateStr;
@@ -23,7 +23,7 @@ export default function ShareWhatsApp({ escala }: ShareWhatsAppProps) {
 
     let text = `🧗‍♂️ *Escala Arvorismo GutBrau - Semanal (${startFormatted} a ${endFormatted})* 🧗‍♂️\n\n`;
 
-    // Group items by date
+    // Agrupa os itens por data
     const itemsByDate: { [date: string]: typeof escala.itens } = {};
     escala.itens.forEach((item) => {
       if (!itemsByDate[item.data]) {
@@ -32,14 +32,14 @@ export default function ShareWhatsApp({ escala }: ShareWhatsAppProps) {
       itemsByDate[item.data].push(item);
     });
 
-    // Sort dates
+    // Ordena as datas
     const sortedDates = Object.keys(itemsByDate).sort();
 
     if (sortedDates.length === 0) {
       text += 'Nenhum turno cadastrado nesta escala.\n';
     } else {
       sortedDates.forEach((dateStr) => {
-        // Get day name in Portuguese
+        // Obtém o nome do dia em português
         const dateObj = new Date(dateStr + 'T00:00:00');
         const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
         const dayFormatted = dayName.charAt(0).toUpperCase() + dayName.slice(1);
@@ -47,7 +47,7 @@ export default function ShareWhatsApp({ escala }: ShareWhatsAppProps) {
         text += `📅 *${dayFormatted} (${formatDate(dateStr)})*\n`;
 
         const dateObjDay = new Date(dateStr + 'T00:00:00');
-        const dayOfWeek = dateObjDay.getDay(); // 0 = Sunday, 6 = Saturday
+        const dayOfWeek = dateObjDay.getDay(); // 0 = Domingo, 6 = Sábado
         const isSat = dayOfWeek === 6;
         const isSun = dayOfWeek === 0;
         const isDayCancelled = (isSat && escala.sabado_cancelado) || (isSun && escala.domingo_cancelado);

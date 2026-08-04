@@ -10,8 +10,8 @@ export interface Colaborador {
 
 export interface Escala {
   id: string;
-  data_inicio: string; // YYYY-MM-DD (Monday of the week)
-  data_fim: string;    // YYYY-MM-DD (Sunday of the week)
+  data_inicio: string; // AAAA-MM-DD (Segunda-feira da semana)
+  data_fim: string;    // AAAA-MM-DD (Domingo da semana)
   publicada: boolean;
   sabado_cancelado: boolean;
   domingo_cancelado: boolean;
@@ -24,14 +24,14 @@ export interface EscalaItem {
   id: string;
   escala_id: string;
   colaborador_id: string;
-  data: string;        // YYYY-MM-DD (specific day, e.g. Friday, Saturday, Sunday)
-  turno: string;       // e.g. '10:00 - 18:00'
-  funcao: string;      // e.g. 'Caixa'
+  data: string;        // AAAA-MM-DD (dia específico, ex: Sexta, Sábado, Domingo)
+  turno: string;       // ex: '10:00 - 18:00'
+  funcao: string;      // ex: 'Caixa'
   treinamento?: boolean;
   comentario_interno?: string;
   falta?: boolean;
   created_at?: string;
-  // Joined relation fields for convenience
+  // Campos de relação de junção (join) por conveniência
   colaborador?: Colaborador;
 }
 

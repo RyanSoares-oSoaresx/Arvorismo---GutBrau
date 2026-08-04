@@ -24,11 +24,11 @@ export default function ManageColaboradoresPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Data states
+  // Estados de dados
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Form states
+  // Estados do formulário
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [nome, setNome] = useState('');
@@ -210,7 +210,7 @@ export default function ManageColaboradoresPage() {
         </div>
       </header>
 
-      {/* Add / Edit Form */}
+      {/* Formulário de Adicionar / Editar */}
       {showForm && (
         <div className="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl p-6 mb-8 relative transition-all duration-200 animate-fadeIn">
           <button 
@@ -327,7 +327,7 @@ export default function ManageColaboradoresPage() {
         </div>
       )}
 
-      {/* Collaborator list */}
+      {/* Lista de colaboradores */}
       {loading ? (
         <div className="flex justify-center items-center py-16">
           <div className="w-8 h-8 border-3 border-accent/20 border-t-accent rounded-full animate-spin"></div>
@@ -385,7 +385,7 @@ export default function ManageColaboradoresPage() {
                 </div>
               </div>
 
-              {/* Quick Points Adjustment */}
+              {/* Ajuste Rápido de Pontos (Score) */}
               <div className="mt-4 pt-3 border-t border-stone-105 dark:border-stone-800/40 flex items-center justify-between">
                 <span className="text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wider">Pontuação</span>
                 <div className="flex items-center gap-1">

@@ -1,7 +1,7 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 import { Colaborador, Escala, EscalaItem, EscalaWithItens } from '../types/database';
 
-// --- MOCK DATABASE IMPLEMENTATION (localStorage) ---
+// --- IMPLEMENTAÇÃO DE BANCO DE DADOS SIMULADO (localStorage) ---
 const LOCAL_STORAGE_KEYS = {
   COLABORADORES: 'gutbrau_colaboradores',
   ESCALAS: 'gutbrau_escalas',
@@ -37,10 +37,10 @@ const defaultColaboradores: Colaborador[] = [
   { id: 'c26', nome: 'Paulo', telefone: '', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
 ];
 
-// Helper to get week start date (Monday) and end date (Sunday) of a given date
+// Auxiliar para obter a data de início (segunda-feira) e término (domingo) de uma semana a partir de uma data
 export function getWeekRange(d: Date = new Date()) {
   const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // ajusta quando o dia é domingo
   const monday = new Date(d.setDate(diff));
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
@@ -59,7 +59,7 @@ const initializeMockData = () => {
   if (currentCols) {
     try {
       const currentScales = localStorage.getItem(LOCAL_STORAGE_KEYS.ESCALAS);
-      // Reset only if scales still contain the old single "cancelada" column (legacy schema migration)
+      // Reseta apenas se as escalas ainda contiverem a coluna antiga "cancelada" (migração de esquema legado)
       if (
         currentScales && 
         JSON.parse(currentScales).length > 0 &&
@@ -148,7 +148,7 @@ const initializeMockData = () => {
   }
 };
 
-// Safe LocalStorage accessors
+// Acessores seguros para o LocalStorage
 const getLocalData = <T>(key: string, defaultValue: T): T => {
   if (typeof window === 'undefined') return defaultValue;
   initializeMockData();
@@ -161,7 +161,7 @@ const setLocalData = <T>(key: string, data: T): void => {
   localStorage.setItem(key, JSON.stringify(data));
 };
 
-// --- DATA ACCESS METHODS ---
+// --- MÉTODOS DE ACESSO A DADOS ---
 
 export const db = {
   // --- COLABORADORES ---
@@ -237,7 +237,7 @@ export const db = {
       const updated = colaboradores.filter(c => c.id !== id);
       setLocalData(LOCAL_STORAGE_KEYS.COLABORADORES, updated);
 
-      // Cascade delete scale items mock-side
+      // Exclusão em cascata dos itens de escala no lado simulado
       const items = getLocalData<EscalaItem[]>(LOCAL_STORAGE_KEYS.ESCALA_ITENS, []);
       const filteredItems = items.filter(item => item.colaborador_id !== id);
       setLocalData(LOCAL_STORAGE_KEYS.ESCALA_ITENS, filteredItems);
@@ -274,7 +274,7 @@ export const db = {
         .single();
       
       if (escError) {
-        if (escError.code === 'PGRST116') return null; // not found
+        if (escError.code === 'PGRST116') return null; // não encontrado
         throw escError;
       }
 
@@ -316,7 +316,7 @@ export const db = {
 
   async getEscalaAtiva(): Promise<EscalaWithItens | null> {
     if (isSupabaseConfigured && supabase) {
-      // Get the most recent published scale
+      // Obtém a escala publicada mais recente
       const { data: escalas, error: escError } = await supabase
         .from('escalas')
         .select('*')
@@ -342,7 +342,7 @@ export const db = {
       };
     } else {
       const escalas = getLocalData<Escala[]>(LOCAL_STORAGE_KEYS.ESCALAS, []);
-      // Get most recent published scale
+      // Obtém a escala publicada mais recente
       const published = escalas
         .filter(e => e.publicada)
         .sort((a, b) => b.data_inicio.localeCompare(a.data_inicio));
@@ -380,7 +380,7 @@ export const db = {
         savedEscala = data;
       }
 
-      // Delete old items if updating
+      // Exclui itens antigos se estiver atualizando
       if (escala.id) {
         const { error: delError } = await supabase
           .from('escala_itens')
@@ -389,7 +389,7 @@ export const db = {
         if (delError) throw delError;
       }
 
-      // Insert new items
+      // Insere novos itens
       const itemsToInsert = itens.map(item => ({
         escala_id: savedEscala.id,
         colaborador_id: item.colaborador_id,
@@ -427,12 +427,12 @@ export const db = {
       }
       setLocalData(LOCAL_STORAGE_KEYS.ESCALAS, escalas);
 
-      // Update items
+      // Atualiza itens
       const allItens = getLocalData<EscalaItem[]>(LOCAL_STORAGE_KEYS.ESCALA_ITENS, []);
-      // Filter out old ones for this scale
+      // Filtra e remove os antigos para esta escala
       const filtered = allItens.filter(item => item.escala_id !== targetId);
       
-      // Append new ones
+      // Adiciona os novos
       const newItens: EscalaItem[] = itens.map(item => ({
         ...item,
         id: 'i_' + Math.random().toString(36).substr(2, 9),

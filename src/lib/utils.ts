@@ -22,14 +22,14 @@ export function getYear(dateStr: string): string {
   return parts[0] || '';
 }
 
-// Check if a date string is Saturday or Sunday
+// Verifica se uma string de data é sábado ou domingo
 export function isWeekend(dateStr: string): boolean {
   const dateObj = new Date(dateStr + 'T00:00:00');
   const day = dateObj.getDay();
   return day === 0 || day === 6; // 0 = Sunday, 6 = Saturday
 }
 
-// Group items by date
+// Agrupa os itens por data
 export function groupItemsByDate<T extends { data: string }>(items: T[]): { [date: string]: T[] } {
   return items.reduce((acc, item) => {
     if (!acc[item.data]) {
@@ -40,7 +40,7 @@ export function groupItemsByDate<T extends { data: string }>(items: T[]): { [dat
   }, {} as { [date: string]: T[] });
 }
 
-// Auto-calculates function display labels for Monitores and Resgatistas based on the day list order
+// Auto-calcula os rótulos de exibição de função para Monitores e Resgatistas com base na ordem da lista do dia
 export function getDisplayFuncao(
   itemFuncao: string, 
   itemColaboradorId: string, 

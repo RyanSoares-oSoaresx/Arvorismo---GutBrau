@@ -166,7 +166,7 @@ const allocateForDay = (dateStr: string, availableCollabs: Colaborador[]) => {
     { funcao: 'Monitor IV (Tirolesa/Base)', roleType: 'Monitor' }
   ];
   
-  // Decide how many slots to fill based on the number of available people (max 7)
+  // Decide quantos turnos preencher com base no número de pessoas disponíveis (máx 7)
   const maxSlotsToFill = Math.min(numAvailable, 7);
   
   const slots: typeof allSlots = [];
@@ -178,7 +178,7 @@ const allocateForDay = (dateStr: string, availableCollabs: Colaborador[]) => {
   if (maxSlotsToFill >= 6) slots.push(allSlots[5]); // Caixa
   if (maxSlotsToFill >= 7) slots.push(allSlots[6]); // Monitor IV
 
-  // First pass: try matching preferred roles
+  // Primeira passagem: tenta corresponder às funções preferidas
   for (const slot of slots) {
     const candidate = pool.find(c => c.funcao_padrao === slot.roleType && !assignedIds.has(c.id));
     if (candidate) {
@@ -193,7 +193,7 @@ const allocateForDay = (dateStr: string, availableCollabs: Colaborador[]) => {
     }
   }
   
-  // Second pass: fill any remaining unfilled slots with anyone left in the pool
+  // Segunda passagem: preenche quaisquer turnos restantes com quem sobrou no grupo
   for (const slot of slots) {
     const isFilled = dayItens.some(item => item.funcao === slot.funcao);
     if (isFilled) continue;
@@ -234,11 +234,11 @@ export default function EditEscalaPage({ params }: EditPageProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Database resources
+  // Recursos do banco de dados
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [loadingResources, setLoadingResources] = useState(true);
 
-  // Form states
+  // Estados do formulário
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
   const [selectedSabado, setSelectedSabado] = useState('');
@@ -259,17 +259,17 @@ export default function EditEscalaPage({ params }: EditPageProps) {
   const [saveLoading, setSaveLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Local helper for date list of the week
+  // Auxiliar local para lista de datas da semana
   const [diasDaSemana, setDiasDaSemana] = useState<{ nome: string; dataStr: string }[]>([]);
 
-  // Availability assistant state
+  // Estado do assistente de disponibilidade
   const [assistenteAberto, setAssistenteAberto] = useState(false);
   const [textoDisponibilidade, setTextoDisponibilidade] = useState('');
   const [resultadosAnalise, setResultadosAnalise] = useState<AvailabilityParseResult[]>([]);
   const [analiseExecutada, setAnaliseExecutada] = useState(false);
   const [finalizada, setFinalizada] = useState(false);
 
-  // Drag and Drop reordering states
+  // Estados de reordenação arrastar-e-soltar (Drag and Drop)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [canDrag, setCanDrag] = useState<boolean>(false);
 
@@ -359,7 +359,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
           setFinalizada(escala.finalizada || false);
           setObservacoes(escala.observacoes || '');
           
-          // Calculate selectedSabado from data_fim (Sunday) by subtracting 1 day
+          // Calcula selectedSabado a partir de data_fim (domingo) subtraindo 1 dia
           const sunDate = new Date(escala.data_fim + 'T00:00:00');
           const satDate = new Date(sunDate);
           satDate.setDate(sunDate.getDate() - 1);
@@ -382,10 +382,10 @@ export default function EditEscalaPage({ params }: EditPageProps) {
           router.push('/admin');
         }
       } else {
-        // Set default date to upcoming Saturday
+        // Define data padrão para o próximo sábado
         const today = new Date();
         const day = today.getDay();
-        const diffToSaturday = day === 6 ? 0 : (day === 0 ? 6 : 6 - day); // how many days to Saturday
+        const diffToSaturday = day === 6 ? 0 : (day === 0 ? 6 : 6 - day); // quantidade de dias até o sábado
         const nextSaturday = new Date(today);
         nextSaturday.setDate(today.getDate() + diffToSaturday);
         const nextSaturdayStr = nextSaturday.toISOString().split('T')[0];
@@ -440,7 +440,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
     setDataFim(sunStr); // Fim é sempre o Domingo por padrão
   };
 
-  // Add empty shift to a specific date
+  // Adiciona turno vazio a uma data específica
   const handleAddShift = (dataStr: string) => {
     if (colaboradores.length === 0) {
       alert('Por favor, cadastre colaboradores ativos primeiro.');
@@ -472,7 +472,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
       
       const updated = { ...item, [field]: value };
       
-      // If collaborator changed, automatically prefill their default role
+      // Se o colaborador mudou, preenche automaticamente sua função padrão
       if (field === 'colaborador_id') {
         const collab = colaboradores.find(c => c.id === value);
         if (collab) {
@@ -505,7 +505,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
         observacoes: observacoes.trim() || undefined
       };
 
-      // Strip temporary details before saving
+      // Remove detalhes temporários antes de salvar
       const itemsPayload = itens.map(item => ({
         colaborador_id: item.colaborador_id,
         data: item.data,
@@ -516,7 +516,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
         falta: item.falta || false,
       }));
 
-      // Adjust collaborator points based on new absences
+      // Ajusta pontos do colaborador com base em novas faltas
       let oldItens: any[] = [];
       if (!isNew) {
         const oldEscala = await db.getEscalaById(id);
@@ -532,11 +532,11 @@ export default function EditEscalaPage({ params }: EditPageProps) {
 
         if (isAbsentNow && !wasAbsentBefore) {
           const currentPts = collab.pontos !== undefined ? collab.pontos : 10;
-          const newPts = Math.max(0, currentPts - 3); // Deduct 3 points for absence
+          const newPts = Math.max(0, currentPts - 3); // Deduz 3 pontos por falta
           collabsToUpdate.push({ ...collab, pontos: newPts });
         } else if (!isAbsentNow && wasAbsentBefore) {
           const currentPts = collab.pontos !== undefined ? collab.pontos : 10;
-          const newPts = currentPts + 3; // Restore 3 points if present again
+          const newPts = currentPts + 3; // Restaura 3 pontos se estiver presente novamente
           collabsToUpdate.push({ ...collab, pontos: newPts });
         }
       });
@@ -575,7 +575,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
 
   return (
     <div className="flex-1 w-full max-w-4xl mx-auto px-4 py-8">
-      {/* Header */}
+      {/* Cabeçalho */}
       <header className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 pb-6 border-b border-stone-200 dark:border-stone-800">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-accent/10 text-accent rounded-2xl">
@@ -604,7 +604,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Locked Scale Warning Banner */}
+          {/* Banner de Alerta de Escala Bloqueada */}
           {finalizada && (
             <div className="bg-red-500/10 dark:bg-red-950/20 border border-red-500/20 dark:border-red-500/10 rounded-3xl p-5 flex items-center gap-4 text-red-700 dark:text-red-400 animate-fadeIn">
               <AlertTriangle className="w-8 h-8 flex-shrink-0 text-red-500" />
@@ -617,7 +617,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
             </div>
           )}
 
-          {/* Global Config Card */}
+          {/* Card de Configuração Geral */}
           <div className="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl p-6 shadow-sm">
             <h3 className="font-bold text-base text-stone-850 dark:text-white mb-4">Configuração Geral</h3>
             
@@ -898,7 +898,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
             </div>
           )}
 
-          {/* Shifts Builder Accordion/List */}
+          {/* Acordeão/Lista do Construtor de Turnos */}
           <div className="space-y-6">
             <h2 className="text-lg font-bold text-stone-850 dark:text-stone-200 flex items-center gap-2">
               <Clock className="w-5 h-5 text-accent" />
@@ -986,7 +986,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                                   const draggedItem = itens[draggedIndex];
                                   const targetItem = itens[item.globalIndex];
                                   
-                                  // Limit reordering to items of the same day
+                                  // Limita a reordenação aos itens do mesmo dia
                                   if (draggedItem.data !== targetItem.data) return;
                                   
                                   const updated = [...itens];
@@ -1128,7 +1128,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
             )}
           </div>
 
-          {/* Form Errors */}
+          {/* Erros do Formulário */}
           {errorMsg && (
             <div className="text-xs text-red-500 font-semibold flex items-center gap-1.5 bg-red-500/10 p-3.5 rounded-xl border border-red-500/20">
               <AlertTriangle className="w-5 h-5 flex-shrink-0" />
@@ -1136,7 +1136,7 @@ export default function EditEscalaPage({ params }: EditPageProps) {
             </div>
           )}
 
-          {/* Form Actions */}
+          {/* Ações do Formulário */}
           <div className="flex items-center justify-end gap-3 pt-6 border-t border-stone-200 dark:border-stone-850">
             <Link
               href="/admin"

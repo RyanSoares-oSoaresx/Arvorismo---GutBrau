@@ -31,7 +31,7 @@ import { formatDate, getDayName, getMonthName, getDisplayFuncao } from '@/lib/ut
 import ShareWhatsApp from '@/components/ShareWhatsApp';
 
 export default function CollaboratorPage() {
-  // Type interfaces for the monthly report
+  // Interfaces de tipo para o relatório mensal
   interface ShiftDetail {
     data: string;
     funcao: string;
@@ -201,7 +201,7 @@ export default function CollaboratorPage() {
       const ativa = await db.getEscalaAtiva();
       
       if (ativa) {
-        // Automatically hide the active scale after Sunday at 22:00
+        // Oculta automaticamente a escala ativa após domingo às 22:00
         const now = new Date();
         const threshold = new Date(ativa.data_fim + 'T22:00:00');
         if (now >= threshold) {
@@ -216,7 +216,7 @@ export default function CollaboratorPage() {
       const todas = await db.getEscalas();
       setHistoricoEscalas(todas);
       
-      // Auto-set the filter to current month
+      // Define automaticamente o filtro para o mês atual
       const today = new Date();
       const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
       setFiltroMes(currentMonth);
@@ -274,7 +274,7 @@ export default function CollaboratorPage() {
           const isWeekendDay = dayName.toLowerCase().includes('sábado') || dayName.toLowerCase().includes('domingo');
           
           const dateObj = new Date(dateStr + 'T00:00:00');
-          const dayOfWeek = dateObj.getDay(); // 0 = Sunday, 6 = Saturday
+          const dayOfWeek = dateObj.getDay(); // 0 = Domingo, 6 = Sábado
           const isSat = dayOfWeek === 6;
           const isSun = dayOfWeek === 0;
           const isDayCancelled = (isSat && escala.sabado_cancelado) || (isSun && escala.domingo_cancelado);
@@ -384,7 +384,7 @@ export default function CollaboratorPage() {
         className="w-full py-20 relative flex items-center justify-center text-center px-4 overflow-hidden bg-cover bg-center"
         style={{ backgroundImage: "url('/gutbrau_ambiente.jpg')" }}
       >
-        {/* Dark Forest Green Tint Overlay for High Text Readability and Brand Cohesion */}
+        {/* Sobreposição de tom verde floresta escuro para alta legibilidade do texto e coesão da marca */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/95 via-primary/85 to-stone-950/95 mix-blend-multiply"></div>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(189,162,105,0.15),transparent_60%)]"></div>
         
@@ -417,10 +417,10 @@ export default function CollaboratorPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* LEFT: Schedules (8 Cols) */}
+          {/* ESQUERDA: Escalas (8 colunas) */}
           <div className="lg:col-span-8 space-y-12">
             
-            {/* Active Weekend Scale Section */}
+            {/* Seção da Escala Ativa do Fim de Semana */}
             <section className="space-y-6">
               <h2 className="text-xl font-extrabold text-stone-850 dark:text-stone-150 flex items-center gap-2.5 pb-2 border-b border-stone-200 dark:border-stone-850">
                 <CalendarDays className="w-5.5 h-5.5 text-accent" />
@@ -491,7 +491,7 @@ export default function CollaboratorPage() {
               )}
             </section>
 
-            {/* Monthly History Section */}
+            {/* Seção do Histórico Mensal */}
             <section className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-stone-200 dark:border-stone-850">
                 <h2 className="text-xl font-extrabold text-stone-850 dark:text-stone-150 flex items-center gap-2.5">
@@ -632,10 +632,10 @@ export default function CollaboratorPage() {
             </section>
           </div>
 
-          {/* RIGHT: Arvorismo / Recreação Checklist Sidebar (4 Cols) */}
+          {/* DIREITA: Barra lateral com checklist de segurança / operação do arvorismo (4 colunas) */}
           <div className="lg:col-span-4 space-y-6">
             
-            {/* Safety Guidelines Card */}
+            {/* Card de Diretrizes de Segurança */}
             <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl p-5 space-y-4 shadow-sm">
               <h3 className="font-serif text-base font-bold text-primary dark:text-accent pb-2 border-b border-stone-200 dark:border-stone-800 flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-accent" />
@@ -660,7 +660,7 @@ export default function CollaboratorPage() {
               </div>
             </div>
 
-            {/* Weather / Operational Conditions Card */}
+            {/* Card de Clima / Condições Operacionais */}
             <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl p-5 space-y-4 shadow-sm">
               <h3 className="font-serif text-base font-bold text-primary dark:text-accent pb-2 border-b border-stone-200 dark:border-stone-800 flex items-center gap-2">
                 <ClipboardList className="w-5 h-5 text-accent" />
@@ -685,7 +685,7 @@ export default function CollaboratorPage() {
               </div>
             </div>
 
-            {/* Landscape Ambient Image Card */}
+            {/* Card de Imagem do Ambiente do Parque */}
             <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl overflow-hidden shadow-sm relative transition-all duration-300 hover:shadow-md">
               <div 
                 className="w-full h-36 bg-cover bg-center bg-no-repeat filter brightness-95"
@@ -698,7 +698,7 @@ export default function CollaboratorPage() {
               </div>
             </div>
 
-            {/* Rescue Preparedness Info */}
+            {/* Informações sobre Preparação para Resgate */}
             <div className="bg-accent/10 border border-accent/25 rounded-3xl p-5 text-center space-y-2">
               <AlertCircle className="w-6 h-6 text-accent mx-auto" />
               <h4 className="font-serif text-sm font-bold text-accent">Alerta de Resgate</h4>
@@ -713,12 +713,12 @@ export default function CollaboratorPage() {
 
       </div>
 
-      {/* Monthly Report Modal overlay */}
+      {/* Overlay do Modal de Relatório Mensal */}
       {isReportOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/75 transition-all duration-300 animate-fadeIn print:absolute print:inset-0 print:bg-white print:p-0">
           <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-850 rounded-3xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col relative overflow-hidden animate-scaleIn print:border-none print:shadow-none print:max-h-none print:w-full print:overflow-visible">
             
-            {/* Modal Header */}
+            {/* Cabeçalho do Modal */}
             <div className="p-6 border-b border-stone-200 dark:border-stone-800 flex justify-between items-center bg-stone-50/50 dark:bg-stone-900/50 print:border-b-2 print:border-black print:pb-4">
               <div className="flex items-center gap-3">
                 <svg className="w-8 h-8 text-accent fill-current print:text-black" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -742,7 +742,7 @@ export default function CollaboratorPage() {
               </button>
             </div>
 
-            {/* Modal Body */}
+            {/* Corpo do Modal */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 print:overflow-visible">
               {reportLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -755,7 +755,7 @@ export default function CollaboratorPage() {
                 </div>
               ) : (
                 <>
-                  {/* Summary Cards Grid */}
+                  {/* Grade de Cards de Resumo */}
                   <div className="grid grid-cols-3 gap-3">
                     <div className="p-4 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-850 rounded-2xl text-center">
                       <p className="text-3xs text-stone-500 dark:text-stone-400 font-bold uppercase tracking-wider">Total de escalas</p>
@@ -771,7 +771,7 @@ export default function CollaboratorPage() {
                     </div>
                   </div>
 
-                  {/* Search box */}
+                  {/* Caixa de pesquisa */}
                   <div className="relative print:hidden">
                     <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
                     <input
@@ -783,7 +783,7 @@ export default function CollaboratorPage() {
                     />
                   </div>
 
-                  {/* Collaborator Statistics List */}
+                  {/* Lista de Estatísticas de Colaboradores */}
                   <div className="space-y-4 print:space-y-6">
                     <h4 className="text-2xs font-bold text-stone-500 dark:text-stone-400 uppercase tracking-widest border-b border-stone-150 dark:border-stone-850 pb-2">
                       Frequência de Colaboradores
@@ -820,7 +820,7 @@ export default function CollaboratorPage() {
                               </div>
                             </div>
 
-                            {/* visual progress bar */}
+                            {/* barra de progresso visual */}
                             <div className="space-y-1.5">
                               <div className="w-full bg-stone-100 dark:bg-stone-800/60 h-2.5 rounded-full overflow-hidden flex print:border print:border-black">
                                 {workedPercent > 0 && (
@@ -840,7 +840,7 @@ export default function CollaboratorPage() {
                               </div>
                             </div>
 
-                            {/* Detailed dates grid */}
+                            {/* grade de datas detalhada */}
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1.5">
                               {c.diasTrabalhados.map((d, idx) => (
                                 <div key={`t-${idx}`} className="p-2 rounded-xl bg-emerald-500/[0.03] border border-emerald-500/10 dark:bg-emerald-500/[0.01] flex items-center justify-between text-3xs">
@@ -870,7 +870,7 @@ export default function CollaboratorPage() {
               )}
             </div>
 
-            {/* Modal Footer */}
+            {/* Rodapé do Modal */}
             <div className="p-6 border-t border-stone-200 dark:border-stone-800 flex flex-col sm:flex-row gap-3 justify-end bg-stone-50/50 dark:bg-stone-900/50 print:hidden">
               <button
                 onClick={() => setIsReportOpen(false)}
@@ -902,7 +902,7 @@ export default function CollaboratorPage() {
         </div>
       )}
 
-      {/* Footer */}
+      {/* Rodapé da página */}
       <footer className="w-full bg-stone-900 text-stone-400 text-xs py-8 px-6 mt-16 border-t border-stone-850 text-center space-y-1.5">
         <p className="font-serif font-semibold text-accent tracking-wider">GUTBRAU RECREAÇÃO</p>
         <p>© 2026 GutBrau Cervejaria. Escalas de Recreação & Arvorismo.</p>

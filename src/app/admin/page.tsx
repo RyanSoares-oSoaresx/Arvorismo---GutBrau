@@ -55,16 +55,16 @@ export default function AdminDashboardPage() {
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
-  // Dashboard state
+  // Estado do Dashboard
   const [escalas, setEscalas] = useState<Escala[]>([]);
   const [loadingEscalas, setLoadingEscalas] = useState(false);
 
-  // Export modal state
+  // Estado do modal de exportação
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportEscala, setExportEscala] = useState<any | null>(null);
   const [exportLoading, setExportLoading] = useState(false);
 
-  // Admin Report state
+  // Estado do Relatório Administrativo
   const [isAdminReportOpen, setIsAdminReportOpen] = useState(false);
   const [adminReportLoading, setAdminReportLoading] = useState(false);
   const [adminReportData, setAdminReportData] = useState<AdminReportItem[]>([]);
@@ -533,12 +533,12 @@ export default function AdminDashboardPage() {
     );
   }
 
-  // LOGIN SCREEN
+  // TELA DE LOGIN
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
         
-        {/* Top Navbar */}
+        {/* Barra de Navegação Superior */}
         <nav className="w-full bg-card-bg dark:bg-stone-900 border-b border-card-border dark:border-stone-800 px-4 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center shadow-sm">
           <div className="flex items-center gap-2">
             {/* Logo Original da Cervejaria GutBrau */}
@@ -618,11 +618,11 @@ export default function AdminDashboardPage() {
     );
   }
 
-  // ADMIN DASHBOARD
+  // PAINEL ADMINISTRATIVO
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       
-      {/* Top Navbar */}
+      {/* Barra de Navegação Superior */}
       <nav className="w-full bg-card-bg dark:bg-stone-900 border-b border-card-border dark:border-stone-800 px-4 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-2">
           {/* Logo Original da Cervejaria GutBrau */}
@@ -653,10 +653,10 @@ export default function AdminDashboardPage() {
         </div>
       </nav>
 
-      {/* Main Container */}
+      {/* Container Principal */}
       <div className="flex-1 w-full max-w-4xl mx-auto px-4 py-10 space-y-8">
         
-        {/* Banner Title */}
+        {/* Título do Banner */}
         <div>
           <h2 className="text-2xl font-serif font-extrabold text-stone-900 dark:text-white tracking-wide">
             Controle de Escalas
@@ -666,7 +666,7 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        {/* Dashboard Navigation Grid */}
+        {/* Grade de Navegação do Painel */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Link
             href="/admin/editar/novo"
@@ -695,7 +695,7 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
 
-        {/* List of existing scales */}
+        {/* Lista de escalas existentes */}
         <div className="space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-stone-200 dark:border-stone-800">
             <h3 className="text-lg font-serif font-extrabold text-stone-850 dark:text-stone-150 flex items-center gap-2">
@@ -781,7 +781,7 @@ export default function AdminDashboardPage() {
                         )}
                       </button>
 
-                      {/* Cancel Saturday */}
+                      {/* Cancelar Sábado */}
                       <button
                         onClick={() => !escala.finalizada && handleToggleCancelDay(escala, 'sabado')}
                         disabled={escala.finalizada}
@@ -798,7 +798,7 @@ export default function AdminDashboardPage() {
                         <span>Sáb {escala.sabado_cancelado ? 'Cancel' : 'Ativo'}</span>
                       </button>
 
-                      {/* Cancel Sunday */}
+                      {/* Cancelar Domingo */}
                       <button
                         onClick={() => !escala.finalizada && handleToggleCancelDay(escala, 'domingo')}
                         disabled={escala.finalizada}
@@ -815,7 +815,7 @@ export default function AdminDashboardPage() {
                         <span>Dom {escala.domingo_cancelado ? 'Cancel' : 'Ativo'}</span>
                       </button>
 
-                      {/* Finalize Lock Toggle */}
+                      {/* Alternar Bloqueio / Finalização */}
                       <button
                         onClick={() => handleToggleFinalize(escala)}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border ${
@@ -888,12 +888,12 @@ export default function AdminDashboardPage() {
 
       </div>
 
-      {/* Export Modal overlay */}
+      {/* Overlay do Modal de Exportação */}
       {isExportModalOpen && exportEscala && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/75 transition-all duration-300 animate-fadeIn print:absolute print:inset-0 print:bg-white print:p-0">
           <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-850 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col relative overflow-hidden animate-scaleIn print:border-none print:shadow-none print:max-h-none print:w-full print:overflow-visible">
             
-            {/* Modal Header */}
+            {/* Cabeçalho do Modal */}
             <div className="p-5 border-b border-stone-200 dark:border-stone-800 flex justify-between items-center bg-stone-50/50 dark:bg-stone-900/50 print:hidden">
               <div className="flex items-center gap-2">
                 <Printer className="w-5 h-5 text-accent" />
@@ -915,7 +915,7 @@ export default function AdminDashboardPage() {
               </button>
             </div>
 
-            {/* Modal Body */}
+            {/* Corpo do Modal */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-stone-50 dark:bg-stone-950/20 print:bg-white print:p-0 print:overflow-visible">
               {exportLoading ? (
                 <div className="flex justify-center items-center py-16">
@@ -924,7 +924,7 @@ export default function AdminDashboardPage() {
               ) : (
                 <div id="export-tables-container" className="space-y-8 bg-white p-6 rounded-2xl border border-stone-200 dark:border-stone-850 print:border-none print:p-0 print:space-y-12">
                   
-                  {/* Saturday Table */}
+                  {/* Tabela de Sábado */}
                   {(() => {
                     const sunDate = new Date(exportEscala.data_fim + 'T00:00:00');
                     const satDate = new Date(sunDate);
@@ -935,7 +935,7 @@ export default function AdminDashboardPage() {
                     return renderExportTable(header, rows);
                   })()}
 
-                  {/* Sunday Table */}
+                  {/* Tabela de Domingo */}
                   {(() => {
                     const sunStr = exportEscala.data_fim;
                     const sunDate = new Date(sunStr + 'T00:00:00');
@@ -948,7 +948,7 @@ export default function AdminDashboardPage() {
               )}
             </div>
 
-            {/* Modal Footer */}
+            {/* Rodapé do Modal */}
             <div className="p-5 border-t border-stone-200 dark:border-stone-800 flex justify-end gap-3 bg-stone-50/50 dark:bg-stone-900/50 print:hidden">
               <button
                 onClick={() => setIsExportModalOpen(false)}
@@ -971,12 +971,12 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Administrative Report Modal overlay */}
+      {/* Overlay do Modal de Relatório Administrativo */}
       {isAdminReportOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/75 transition-all duration-300 animate-fadeIn print:absolute print:inset-0 print:bg-white print:p-0 animate-fadeIn">
           <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-850 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col relative overflow-hidden animate-scaleIn print:border-none print:shadow-none print:max-h-none print:w-full print:overflow-visible">
             
-            {/* Modal Header */}
+            {/* Cabeçalho do Modal */}
             <div className="p-5 border-b border-stone-200 dark:border-stone-800 flex justify-between items-center bg-stone-50/50 dark:bg-stone-900/50 print:hidden">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-accent" />
@@ -998,7 +998,7 @@ export default function AdminDashboardPage() {
               </button>
             </div>
 
-            {/* Filter controls at the top (hidden in print) */}
+            {/* Controles de filtro no topo (ocultos na impressão) */}
             <div className="px-6 py-4 bg-white dark:bg-stone-900 border-b border-stone-150 dark:border-stone-850 flex flex-wrap items-center justify-between gap-3 print:hidden">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-stone-500 dark:text-stone-450 uppercase tracking-wider">Filtrar Período:</span>
@@ -1031,7 +1031,7 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* Modal Body */}
+            {/* Corpo do Modal */}
             <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-stone-50 dark:bg-stone-950/20 print:bg-white print:p-0 print:overflow-visible">
               {adminReportLoading ? (
                 <div className="flex justify-center items-center py-16">
@@ -1040,7 +1040,7 @@ export default function AdminDashboardPage() {
               ) : (
                 <div id="admin-report-container" className="space-y-8 print:space-y-12">
                   
-                  {/* Print Header */}
+                  {/* Cabeçalho de Impressão */}
                   <div className="hidden print:flex items-center justify-between pb-6 border-b border-stone-300 mb-8">
                     <div>
                       <h1 className="text-xl font-serif font-bold text-stone-900">Relatório Administrativo de Equipe</h1>
@@ -1051,7 +1051,7 @@ export default function AdminDashboardPage() {
                     <img src="/logo_ext_verde.png" alt="GutBrau Logo" className="h-10 w-auto object-contain" />
                   </div>
 
-                  {/* Summary Table */}
+                  {/* Tabela de Resumo */}
                   <div className="bg-white dark:bg-stone-900 p-5 rounded-2xl border border-stone-200 dark:border-stone-850 shadow-sm print:border-none print:shadow-none print:p-0">
                     <h4 className="font-serif text-sm font-bold text-stone-850 dark:text-stone-100 mb-4 flex items-center gap-1.5 border-b border-stone-100 dark:border-stone-800 pb-2">
                       Resumo da Frequência e Pontuação
@@ -1109,7 +1109,7 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Detailed shift breakdown for each collaborator */}
+                  {/* Detalhamento de turnos para cada colaborador */}
                   <div className="space-y-6 print:space-y-8">
                     <h4 className="font-serif text-sm font-bold text-stone-850 dark:text-stone-150 border-b border-stone-200 dark:border-stone-800 pb-2 flex items-center gap-1.5">
                       Detalhamento de Turnos e Comentários Administrativos
@@ -1205,7 +1205,7 @@ export default function AdminDashboardPage() {
               )}
             </div>
 
-            {/* Modal Footer */}
+            {/* Rodapé do Modal */}
             <div className="p-5 border-t border-stone-200 dark:border-stone-800 flex justify-end gap-3 bg-stone-50/50 dark:bg-stone-900/50 print:hidden">
               <button
                 onClick={() => setIsAdminReportOpen(false)}
@@ -1239,7 +1239,7 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Footer */}
+      {/* Rodapé da página */}
       <footer className="w-full bg-stone-900 text-stone-400 text-xs py-8 px-6 mt-16 border-t border-stone-850 text-center space-y-1.5">
         <p className="font-serif font-semibold text-accent tracking-wider">GUTBRAU CERVEJARIA</p>
         <p>© 2026 GutBrau Cervejaria. Painel de Controle Interno.</p>
