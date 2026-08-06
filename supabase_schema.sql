@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS colaboradores (
 -- ALTER TABLE colaboradores ADD COLUMN IF NOT EXISTS pontos INTEGER DEFAULT 10;
 -- ALTER TABLE escalas ADD COLUMN IF NOT EXISTS finalizada BOOLEAN NOT NULL DEFAULT false;
 -- ALTER TABLE escala_itens ADD COLUMN IF NOT EXISTS comentario_interno TEXT;
+-- ALTER TABLE escala_itens ADD COLUMN IF NOT EXISTS falta BOOLEAN NOT NULL DEFAULT false;
 
 -- Habilitar Row Level Security (RLS) se desejado.
 -- Para facilidade inicial, as regras de RLS podem ser simplificadas ou desativadas.
@@ -45,6 +46,7 @@ CREATE TABLE IF NOT EXISTS escala_itens (
     turno TEXT NOT NULL, -- Horário de trabalho (ex: '10:00 - 18:00')
     funcao TEXT NOT NULL, -- Função exercida naquele dia (ex: 'Caixa')
     treinamento BOOLEAN NOT NULL DEFAULT false,
+    falta BOOLEAN NOT NULL DEFAULT false,
     comentario_interno TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );

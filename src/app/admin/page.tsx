@@ -25,11 +25,16 @@ import {
   Share2,
   Clipboard,
   FileText,
-  MessageSquare
+  MessageSquare,
+  Database,
+  UploadCloud,
+  Check,
+  RefreshCw
 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { formatDate } from '@/lib/utils';
 import { Escala, Colaborador } from '@/types/database';
+import { isSupabaseConfigured, testSupabaseConnection } from '@/lib/supabase';
 
 interface AdminReportItem {
   colaborador: Colaborador;
@@ -58,6 +63,12 @@ export default function AdminDashboardPage() {
   // Estado do Dashboard
   const [escalas, setEscalas] = useState<Escala[]>([]);
   const [loadingEscalas, setLoadingEscalas] = useState(false);
+
+  // Diagnóstico Supabase e Migração
+  const [connectionStatus, setConnectionStatus] = useState<'loading' | 'connected' | 'demo' | 'error'>('loading');
+  const [connectionError, setConnectionError] = useState<string>('');
+  const [hasLocalDataToMigrate, setHasLocalDataToMigrate] = useState<boolean>(false);
+  const [migrationLoading, setMigrationLoading] = useState<boolean>(false);
 
   // Estado do modal de exportação
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -217,8 +228,71 @@ export default function AdminDashboardPage() {
     );
   };
 
+  const verifySupabaseConnection = async () => {
+    setConnectionStatus('loading');
+    setConnectionError('');
+    try {
+      const res = await testSupabaseConnection();
+      if (res.success) {
+        setConnectionStatus('connected');
+      } else {
+        if (!isSupabaseConfigured) {
+          setConnectionStatus('demo');
+        } else {
+          setConnectionStatus('error');
+          setConnectionError(res.error || 'Erro desconhecido ao conectar com o Supabase.');
+        }
+      }
+    } catch (err: any) {
+      setConnectionStatus('error');
+      setConnectionError(err?.message || 'Falha de rede ao se conectar ao Supabase.');
+    }
+  };
+
+  const checkLocalData = () => {
+    if (typeof window === 'undefined') return;
+    const localColabsStr = localStorage.getItem('gutbrau_colaboradores');
+    const localEscalasStr = localStorage.getItem('gutbrau_escalas');
+    const alreadyMigrated = localStorage.getItem('gutbrau_migrated_to_supabase') === 'true';
+    
+    let hasData = false;
+    try {
+      const localColabs = localColabsStr ? JSON.parse(localColabsStr) : [];
+      const localEscalas = localEscalasStr ? JSON.parse(localEscalasStr) : [];
+      hasData = localEscalas.length > 0 && !alreadyMigrated;
+    } catch (e) {
+      hasData = false;
+    }
+    setHasLocalDataToMigrate(hasData);
+  };
+
+  const handleMigrateData = async () => {
+    if (!confirm('Esta ação irá migrar os colaboradores e escalas salvas localmente neste navegador para o Supabase conectado. Deseja prosseguir?')) {
+      return;
+    }
+
+    setMigrationLoading(true);
+    try {
+      const result = await db.migrateLocalDataToSupabase();
+      if (result.success) {
+        alert(`Sincronização concluída com sucesso!\n• Colaboradores migrados: ${result.colaboradoresMigrados}\n• Escalas migradas: ${result.escalasMigradas}\n• Itens de escala migrados: ${result.itensMigrados}`);
+        setHasLocalDataToMigrate(false);
+        loadEscalas();
+      } else {
+        alert(`Erro durante a migração:\n${result.error || 'Erro desconhecido.'}`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(`Falha inesperada durante a migração:\n${err?.message || 'Consulte o console para mais detalhes.'}`);
+    } finally {
+      setMigrationLoading(false);
+    }
+  };
+
   useEffect(() => {
     checkAuth();
+    verifySupabaseConnection();
+    checkLocalData();
   }, []);
 
   const checkAuth = async () => {
@@ -664,6 +738,131 @@ export default function AdminDashboardPage() {
           <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
             Crie, edite e publique as escalas semanais para toda a equipe.
           </p>
+        </div>
+
+        {/* Supabase Status & Migration Card */}
+        <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-850 rounded-3xl p-6 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-stone-100 dark:bg-stone-950 text-accent rounded-xl border border-stone-200/50 dark:border-stone-800">
+                <Database className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-stone-900 dark:text-white">Conexão Supabase</h3>
+                <p className="text-3xs text-stone-500 dark:text-stone-400 font-medium uppercase tracking-widest mt-0.5">Sincronização de Banco de Dados</p>
+              </div>
+            </div>
+            
+            {/* Status Badge */}
+            <div className="flex-shrink-0 flex items-center">
+              {connectionStatus === 'loading' && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-stone-100 text-stone-600 dark:bg-stone-950 dark:text-stone-400 text-xs font-bold rounded-xl border border-stone-200 dark:border-stone-800">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  Verificando...
+                </div>
+              )}
+              {connectionStatus === 'connected' && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-xl border border-emerald-500/20">
+                  <Check className="w-3.5 h-3.5" />
+                  Conectado
+                </div>
+              )}
+              {connectionStatus === 'demo' && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-700 dark:text-accent text-xs font-bold rounded-xl border border-amber-500/20">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  Modo Local (Demo)
+                </div>
+              )}
+              {connectionStatus === 'error' && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-750 text-xs font-bold rounded-xl border border-red-500/20">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  Erro de Conexão
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Conditional Info / Controls */}
+          {connectionStatus === 'demo' && (
+            <div className="bg-amber-500/5 rounded-2xl p-4 border border-amber-500/10 text-xs text-amber-900 dark:text-stone-300 space-y-2.5">
+              <p className="leading-relaxed">
+                As variáveis de banco de dados não estão configuradas no arquivo <code className="bg-amber-500/10 dark:bg-stone-950 px-1.5 py-0.5 rounded text-[10px] font-mono text-accent">.env.local</code>. Os dados estão sendo lidos/salvos localmente no seu navegador.
+              </p>
+              <div className="text-[10px] font-semibold text-stone-500 uppercase tracking-widest pt-1">
+                Como conectar:
+              </div>
+              <ol className="list-decimal pl-4 space-y-1 text-3xs text-stone-500 dark:text-stone-400">
+                <li>Abra o painel do Supabase, vá em <strong className="text-stone-700 dark:text-white">Project Settings &gt; API</strong>.</li>
+                <li>Copie a <strong className="text-stone-700 dark:text-white">URL</strong> e a chave <strong className="text-stone-700 dark:text-white">anon public</strong> (começa com `eyJ...`).</li>
+                <li>Preencha o arquivo <code className="font-mono bg-stone-100 dark:bg-stone-950 p-0.5 rounded">.env.local</code> com esses valores e reinicie o servidor.</li>
+              </ol>
+            </div>
+          )}
+
+          {connectionStatus === 'error' && (
+            <div className="bg-red-500/5 rounded-2xl p-4 border border-red-500/10 text-xs text-red-950 dark:text-stone-300 space-y-3">
+              <div className="flex items-start gap-2 text-red-750">
+                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <strong className="font-bold">Falha ao acessar tabelas:</strong>
+                  <p className="mt-1 font-mono text-[10px] bg-red-500/10 dark:bg-stone-950 p-2 rounded-lg break-all">
+                    {connectionError}
+                  </p>
+                </div>
+              </div>
+              <p className="text-3xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                Este erro geralmente ocorre devido a uma chave de API incorreta (atualmente foi detectada uma chave Clerk <code className="font-mono bg-stone-100 dark:bg-stone-950 p-0.5 rounded">sb_publishable_...</code> no seu arquivo .env) ou porque as tabelas do script SQL ainda não foram criadas no Supabase.
+              </p>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={verifySupabaseConnection}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-650 hover:bg-red-700 text-white font-bold text-3xs uppercase tracking-wider rounded-xl transition-all"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Testar Novamente
+                </button>
+              </div>
+            </div>
+          )}
+
+          {connectionStatus === 'connected' && (
+            <div className="bg-emerald-500/5 rounded-2xl p-4 border border-emerald-500/10 text-xs text-emerald-950 dark:text-stone-300 space-y-3">
+              <p className="leading-relaxed">
+                Seu painel está conectado com sucesso ao banco de dados Supabase! As alterações estão sendo salvas diretamente na nuvem.
+              </p>
+              
+              {hasLocalDataToMigrate && (
+                <div className="border-t border-emerald-500/10 pt-3 mt-1 space-y-2.5">
+                  <div className="flex items-start gap-2.5 text-accent">
+                    <UploadCloud className="w-4.5 h-4.5 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong className="font-bold text-stone-850 dark:text-stone-100">Migração pendente encontrada!</strong>
+                      <p className="text-3xs text-stone-500 dark:text-stone-400 mt-0.5 leading-relaxed">
+                        Detectamos escalas e/ou colaboradores criados no seu navegador (modo local). Você pode enviá-los para o Supabase para não perder o trabalho feito.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleMigrateData}
+                    disabled={migrationLoading}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-accent hover:bg-accent-hover text-white font-bold text-3xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-accent/15 disabled:opacity-50"
+                  >
+                    {migrationLoading ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        Migrando dados...
+                      </>
+                    ) : (
+                      <>
+                        <UploadCloud className="w-3.5 h-3.5" />
+                        Migrar Escala Local para o Supabase
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Grade de Navegação do Painel */}

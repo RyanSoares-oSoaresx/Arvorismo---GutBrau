@@ -8,7 +8,7 @@ const LOCAL_STORAGE_KEYS = {
   ESCALA_ITENS: 'gutbrau_escala_itens',
 };
 
-const defaultColaboradores: Colaborador[] = [
+export const defaultColaboradores: Colaborador[] = [
   { id: 'c1', nome: 'André Rechia', telefone: '', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
   { id: 'c2', nome: 'Claufer Scurra', telefone: '', funcao_padrao: 'Monitor', ativo: true, pontos: 10 },
   { id: 'c3', nome: 'Guilherme Aguilhera', telefone: '', funcao_padrao: 'Resgatista', ativo: true, pontos: 10 },
@@ -245,7 +245,46 @@ export const db = {
   },
 
   // --- ESCALAS ---
+  async cleanOldEscalas(): Promise<void> {
+    const limitDate = new Date();
+    limitDate.setMonth(limitDate.getMonth() - 4);
+    const limitDateStr = limitDate.toISOString().split('T')[0];
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase
+          .from('escalas')
+          .delete()
+          .lt('data_fim', limitDateStr);
+        if (error) console.error('Erro ao limpar escalas antigas no Supabase:', error);
+      } catch (err) {
+        console.error('Falha ao limpar escalas antigas:', err);
+      }
+    } else {
+      try {
+        const escalas = getLocalData<Escala[]>(LOCAL_STORAGE_KEYS.ESCALAS, []);
+        const validEscalas = escalas.filter(e => e.data_fim >= limitDateStr);
+        const deletedIds = escalas.filter(e => e.data_fim < limitDateStr).map(e => e.id);
+        
+        if (deletedIds.length > 0) {
+          setLocalData(LOCAL_STORAGE_KEYS.ESCALAS, validEscalas);
+          const items = getLocalData<EscalaItem[]>(LOCAL_STORAGE_KEYS.ESCALA_ITENS, []);
+          setLocalData(LOCAL_STORAGE_KEYS.ESCALA_ITENS, items.filter(item => !deletedIds.includes(item.escala_id)));
+        }
+      } catch (err) {
+        console.error('Falha ao limpar escalas antigas no localStorage:', err);
+      }
+    }
+  },
+
   async getEscalas(): Promise<Escala[]> {
+    // Limpa automaticamente escalas mais antigas que 4 meses
+    try {
+      await this.cleanOldEscalas();
+    } catch (e) {
+      console.error('Erro na limpeza automática de escalas:', e);
+    }
+
     if (isSupabaseConfigured && supabase) {
       const { data, error } = await supabase
         .from('escalas')
@@ -459,6 +498,176 @@ export const db = {
 
       const items = getLocalData<EscalaItem[]>(LOCAL_STORAGE_KEYS.ESCALA_ITENS, []);
       setLocalData(LOCAL_STORAGE_KEYS.ESCALA_ITENS, items.filter(item => item.escala_id !== id));
+    }
+  },
+
+  async migrateLocalDataToSupabase(): Promise<{ success: boolean; colaboradoresMigrados: number; escalasMigradas: number; itensMigrados: number; error?: string }> {
+    if (!isSupabaseConfigured || !supabase) {
+      return { success: false, colaboradoresMigrados: 0, escalasMigradas: 0, itensMigrados: 0, error: 'Supabase não está configurado.' };
+    }
+
+    try {
+      const localColabs = getLocalData<Colaborador[]>(LOCAL_STORAGE_KEYS.COLABORADORES, []);
+      const localEscalas = getLocalData<Escala[]>(LOCAL_STORAGE_KEYS.ESCALAS, []);
+      const localItens = getLocalData<EscalaItem[]>(LOCAL_STORAGE_KEYS.ESCALA_ITENS, []);
+
+      if (localColabs.length === 0 && localEscalas.length === 0) {
+        return { success: true, colaboradoresMigrados: 0, escalasMigradas: 0, itensMigrados: 0 };
+      }
+
+      const colabIdMap: Record<string, string> = {};
+      let colabsMigradosCount = 0;
+
+      const { data: dbColabs, error: colabError } = await supabase
+        .from('colaboradores')
+        .select('id, nome');
+      
+      if (colabError) throw colabError;
+
+      const dbColabsByName = new Map<string, string>();
+      if (dbColabs) {
+        dbColabs.forEach(c => dbColabsByName.set(c.nome.trim().toLowerCase(), c.id));
+      }
+
+      for (const colab of localColabs) {
+        const cleanName = colab.nome.trim();
+        const existingId = dbColabsByName.get(cleanName.toLowerCase());
+
+        if (existingId) {
+          colabIdMap[colab.id] = existingId;
+        } else {
+          const { data: newColab, error: insColabError } = await supabase
+            .from('colaboradores')
+            .insert({
+              nome: cleanName,
+              telefone: colab.telefone || '',
+              funcao_padrao: colab.funcao_padrao,
+              ativo: colab.ativo !== undefined ? colab.ativo : true,
+              pontos: colab.pontos !== undefined ? colab.pontos : 10
+            })
+            .select('id')
+            .single();
+
+          if (insColabError) throw insColabError;
+          if (newColab) {
+            colabIdMap[colab.id] = newColab.id;
+            colabsMigradosCount++;
+          }
+        }
+      }
+
+      const escalaIdMap: Record<string, string> = {};
+      let escalasMigradasCount = 0;
+      let itensMigradosCount = 0;
+
+      for (const escala of localEscalas) {
+        const { data: existingEscalas, error: escCheckError } = await supabase
+          .from('escalas')
+          .select('id')
+          .eq('data_inicio', escala.data_inicio)
+          .eq('data_fim', escala.data_fim)
+          .limit(1);
+
+        if (escCheckError) throw escCheckError;
+
+        let scaleUuid: string;
+
+        if (existingEscalas && existingEscalas.length > 0) {
+          scaleUuid = existingEscalas[0].id;
+          escalaIdMap[escala.id] = scaleUuid;
+
+          const { error: delItensError } = await supabase
+            .from('escala_itens')
+            .delete()
+            .eq('escala_id', scaleUuid);
+          
+          if (delItensError) throw delItensError;
+
+          const { error: updEscError } = await supabase
+            .from('escalas')
+            .update({
+              publicada: escala.publicada,
+              sabado_cancelado: escala.sabado_cancelado,
+              domingo_cancelado: escala.domingo_cancelado,
+              finalizada: !!escala.finalizada,
+              observacoes: escala.observacoes || ''
+            })
+            .eq('id', scaleUuid);
+          
+          if (updEscError) throw updEscError;
+        } else {
+          const { data: newScale, error: insEscError } = await supabase
+            .from('escalas')
+            .insert({
+              data_inicio: escala.data_inicio,
+              data_fim: escala.data_fim,
+              publicada: escala.publicada,
+              sabado_cancelado: escala.sabado_cancelado,
+              domingo_cancelado: escala.domingo_cancelado,
+              finalizada: !!escala.finalizada,
+              observacoes: escala.observacoes || ''
+            })
+            .select('id')
+            .single();
+
+          if (insEscError) throw insEscError;
+          if (newScale) {
+            scaleUuid = newScale.id;
+            escalaIdMap[escala.id] = scaleUuid;
+            escalasMigradasCount++;
+          } else {
+            throw new Error(`Falha ao criar escala para ${escala.data_inicio}`);
+          }
+        }
+
+        const itemsToInsert = localItens
+          .filter(item => item.escala_id === escala.id)
+          .map(item => {
+            const mappedColabId = colabIdMap[item.colaborador_id];
+            if (!mappedColabId) return null;
+
+            return {
+              escala_id: scaleUuid,
+              colaborador_id: mappedColabId,
+              data: item.data,
+              turno: item.turno,
+              funcao: item.funcao,
+              treinamento: !!item.treinamento,
+              falta: !!item.falta,
+              comentario_interno: item.comentario_interno || '',
+            };
+          })
+          .filter(Boolean) as any[];
+
+        if (itemsToInsert.length > 0) {
+          const { error: insItensError } = await supabase
+            .from('escala_itens')
+            .insert(itemsToInsert);
+
+          if (insItensError) throw insItensError;
+          itensMigradosCount += itemsToInsert.length;
+        }
+      }
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('gutbrau_migrated_to_supabase', 'true');
+      }
+
+      return {
+        success: true,
+        colaboradoresMigrados: colabsMigradosCount,
+        escalasMigradas: escalasMigradasCount,
+        itensMigrados: itensMigradosCount
+      };
+    } catch (err: any) {
+      console.error('Erro durante migração:', err);
+      return {
+        success: false,
+        colaboradoresMigrados: 0,
+        escalasMigradas: 0,
+        itensMigrados: 0,
+        error: err?.message || 'Erro desconhecido na migração.'
+      };
     }
   }
 };
