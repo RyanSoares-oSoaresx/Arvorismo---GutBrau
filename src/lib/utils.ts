@@ -55,7 +55,7 @@ export function getDisplayFuncao(
     if (index === 0) return 'Monitor 1 - Tirolesa';
     if (index === 1) return 'Monitor 2 - Base';
     if (index === 2) return 'Monitor 3 Base/Caixa';
-    if (index === 3) return 'Monitor 4 Base/Tirolesa';
+    if (index === 3) return 'Monitor IV Base/Tirolesa';
     return `Monitor ${index + 1}`;
   }
   
