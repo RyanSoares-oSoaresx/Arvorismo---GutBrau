@@ -132,7 +132,7 @@ export default function AdminDashboardPage() {
         result.monitor3 = displayName;
       } else if (func === 'Caixa') {
         result.caixa = displayName;
-      } else if (func === 'Monitor IV (Tirolesa/Base)') {
+      } else if (func === 'Monitor IV (Tirolesa/Base)' || func === 'Monitor 4 Base/Tirolesa') {
         result.monitor4 = displayName;
       } else if (func === 'Resgatista') {
         genericResgatistas.push(item);

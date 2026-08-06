@@ -1064,6 +1064,8 @@ export default function EditEscalaPage({ params }: EditPageProps) {
                                     <option value="Monitor I (Tirolesa)" className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">Monitor I (Tirolesa)</option>
                                     <option value="Monitor II (Base)" className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">Monitor II (Base)</option>
                                     <option value="Monitor III (Bike/Caixa)" className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">Monitor III (Bike/Caixa)</option>
+                                    <option value="Monitor IV (Tirolesa/Base)" className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">Monitor IV (Tirolesa/Base)</option>
+                                    <option value="Monitor 4 Base/Tirolesa" className="text-stone-900 dark:text-stone-100 bg-white dark:bg-stone-950">Monitor 4 Base/Tirolesa</option>
                                   </select>
                                 </div>
 
